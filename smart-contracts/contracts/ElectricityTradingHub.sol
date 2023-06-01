@@ -110,15 +110,18 @@ contract ElectricityTradingHub {
 
             uint32 price = 0;
             if (provisioning.isRenewable) {
-                price = getPriceInCents(amountInKwH);
+                price = getPriceInCents(amountInKwH);            
+                provisioning.provider.transfer(price);
                 pool.changeProvidedEnergy(msg.sender, consumedKwH);
             } else {
-                price = amountInKwH * spotPriceInCent;
-                // Add kwh amount to renewable pool
-                pool.addResidualPremium(price);
+                price = amountInKwH * spotPriceInCent;                
+                provisioning.provider.transfer(price);
+                
+                // Add premium
+                uint32 premium = getPremium(consumedKwH);       
+                provisioning.provider.transfer(premium);
             }
 
-            provisioning.provider.transfer(price);
         }
     }
 

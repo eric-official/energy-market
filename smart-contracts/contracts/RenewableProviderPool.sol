@@ -8,7 +8,7 @@ contract RenewableProviderPool {
 
     address private distributer;
     address private owner;
-
+ 
     constructor(address distribut) {
         distributer = distribut;
         owner = msg.sender;
@@ -22,7 +22,7 @@ contract RenewableProviderPool {
     /**
     * Add the provided energy for provider and, if applicable, add them to the pool.
     */
-    function changeProvidedEnergy(address provider, uint32 kwhAmount) public onlyOwner{
+    function changeProvidedEnergy(address provider, uint32 kwhAmount) public onlyOwner {
         totalkwH += kwhAmount;
         if (provisionedElectricity[provider] == 0) {
             providers.push(provider);
@@ -31,20 +31,9 @@ contract RenewableProviderPool {
     }
 
     /**
-    * Adds the residual premium of non renewable providers to the pool.
-    */
-    function addResidualPremium(uint32 value) public payable onlyOwner{
-        require(msg.value >= value);
-
-        // Store the premium value
-        payable(address(this)).transfer(value);
-    }
-
-    /**
     * Distributes the stored premium amount the providers.    
     */
     function distribute() public payable {
-
         require(msg.sender == distributer, "Only the distributer can trigger the distribution.");
 
         uint256 balance = address(this).balance;
