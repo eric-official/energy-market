@@ -1,32 +1,45 @@
-// We require the Hardhat Runtime Environment explicitly here. This is optional
-// but useful for running the script in a standalone fashion through `node <script>`.
-//
-// You can also run a script with `npx hardhat run <script>`. If you do that, Hardhat
-// will compile your contracts, add the Hardhat Runtime Environment's members to the
-// global scope, and execute the script.
-const hre = require("hardhat");
+const hre = require('hardhat')
+const fs = require('fs');
 
-async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const unlockTime = currentTimestampInSeconds + 60;
+const deployContracts = async () => {
+  let deployedContracts = {}
 
-  const lockedAmount = hre.ethers.utils.parseEther("0.001");
+  // Deploy ElectricityTradingHub
+  const ethFactory = await hre.ethers.getContractFactory('ElectricityTradingHub')
+  const ethContract = await ethFactory.deploy()
+  await ethContract.deployed()
+  deployedContracts["ElectricityTradingHub"] = ethContract.address
+  console.log('ElectricityTradingHub deployed to:', ethContract.address)
 
-  const Lock = await hre.ethers.getContractFactory("Lock");
-  const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
+  // Deploy RenewableProviderPool
+  const rppFactory = await hre.ethers.getContractFactory('RenewableProviderPool')
+  const rppContract = await rppFactory.deploy()
+  await rppContract.deployed()
+  deployedContracts["RenewableProviderPool"] = rppContract.address
+  console.log('RenewableProviderPool deployed to:', rppContract.address)
 
-  await lock.deployed();
-
-  console.log(
-    `Lock with ${ethers.utils.formatEther(
-      lockedAmount
-    )}ETH and unlock timestamp ${unlockTime} deployed to ${lock.address}`
-  );
+  return JSON.stringify(deployedContracts);
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+const runDeployContracts = async () => {
+  try {
+    return await deployContracts();
+  } catch (error) {
+    console.error(error)
+    process.exit(1)
+  }
+}
+
+const awaitDeployContracts = async () => {
+  const deployedContracts = await runDeployContracts()
+  console.log(deployedContracts)
+  fs.writeFile("./scripts/deployedContracts.json", deployedContracts, (error) => {
+    if (error) {
+      console.error(error);
+      throw error;
+    }
+    console.log("deployedContracts.json written correctly");
+  });
+}
+
+awaitDeployContracts()
