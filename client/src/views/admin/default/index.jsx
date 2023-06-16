@@ -1,5 +1,6 @@
 import MiniCalendar from "components/calendar/MiniCalendar";
 import WeeklyRevenue from "views/admin/default/components/WeeklyRevenue";
+import WalletCard from "./components/WalletCard";
 import TotalSpent from "views/admin/default/components/TotalSpent";
 import PieChartCard from "views/admin/default/components/PieChartCard";
 import { IoMdHome } from "react-icons/io";
@@ -22,6 +23,7 @@ const Dashboard = () => {
       {/* Card widget */}
 
       <div className="mt-3 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3 3xl:grid-cols-6">
+        <WalletCard/>
         <Widget
           icon={<MdBarChart className="h-7 w-7" />}
           title={"Earnings"}
