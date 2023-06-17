@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.7.0 <0.9.0;
-import "contracts/RenewableProviderPool.sol";
+import "./RenewableProviderPool.sol";
 
 contract ElectricityTradingHub {
 
@@ -62,6 +62,22 @@ contract ElectricityTradingHub {
 
     function getQueueLength() private view returns (uint256) {
         return queue.rear - queue.front + 1;
+    }
+
+    function getQueue() public view returns (Provisioning[] memory) {
+        return queue.data;
+    }
+
+    function getCo2PricePerTonInCent() public view returns (uint16) {
+        return co2PricePerTonInCent;
+    }
+
+    function getGramCo2PerKwH() public view returns (uint16) {
+        return gramCo2PerKwH;
+    }
+
+    function getSpotPriceInCent() public view returns (uint16) {
+        return spotPriceInCent;
     }
     
     /**

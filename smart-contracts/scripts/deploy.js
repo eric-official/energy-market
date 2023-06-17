@@ -12,11 +12,11 @@ const deployContracts = async () => {
   console.log('ElectricityTradingHub deployed to:', ethContract.address)
 
   // Deploy RenewableProviderPool
-  const rppFactory = await hre.ethers.getContractFactory('RenewableProviderPool')
-  const rppContract = await rppFactory.deploy()
-  await rppContract.deployed()
-  deployedContracts["RenewableProviderPool"] = rppContract.address
-  console.log('RenewableProviderPool deployed to:', rppContract.address)
+  // const rppFactory = await hre.ethers.getContractFactory('RenewableProviderPool')
+  // const rppContract = await rppFactory.deploy()
+  // await rppContract.deployed()
+  // deployedContracts["RenewableProviderPool"] = rppContract.address
+  // console.log('RenewableProviderPool deployed to:', rppContract.address)
 
   return JSON.stringify(deployedContracts);
 }
