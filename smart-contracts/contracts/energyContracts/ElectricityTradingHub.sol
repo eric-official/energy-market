@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.7.0 <0.9.0;
-import "./RenewableProviderPool.sol";
+import "contracts/energyContracts/RenewableProviderPool.sol";
 
 contract ElectricityTradingHub {
 
