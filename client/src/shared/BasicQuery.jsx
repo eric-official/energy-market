@@ -30,7 +30,19 @@ const connectWallet = async () => {
     }
 }
 
+async function getContract(contractAddress, contractAbi) {
+    const provider = new ethers.AlchemyProvider("goerli", "EUL_b0M4xTEMnUpJvDAZpSdRJQiKNWid");
+    const signer = new ethers.Wallet("8db49dd3304778a40cc33e17a7427bdf7aee01d5be385029f848579399f109cc", provider)
+    const contract = new ethers.Contract(
+        contractAddress,
+        contractAbi,
+        signer
+    )
+    return contract
+}
+
 export {
+    getContract,
     isWalletConnected,
     connectWallet,
 }
