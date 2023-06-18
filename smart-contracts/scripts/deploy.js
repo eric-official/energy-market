@@ -11,7 +11,7 @@ const deployContracts = async () => {
   deployedContracts["ElectricityTradingHub"] = ethContract.address
   console.log('ElectricityTradingHub deployed to:', ethContract.address)
 
-  // // Deploy RenewableProviderPool
+  // Deploy RenewableProviderPool
   // const rppFactory = await hre.ethers.getContractFactory('RenewableProviderPool')
   // const rppContract = await rppFactory.deploy()
   // await rppContract.deployed()
