@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Random Oracle Client</title>
+    <style>
+      .request {
+        color: red;
+      }
+
+      .response {
+        color: green;
+      }
+    </style>
+  <head>
+  <body>
+    <button id="request-rand" class="button">Request random number</button><br>
+    <pre id="request-id"></pre>
+    <ul id="events"></ul>
+
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    <script src="./callerABI.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

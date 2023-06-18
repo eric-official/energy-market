@@ -1,8 +1,6 @@
 oracleServer/node_modules
-oracleServer/package-lock.json
 node_modules
 
-package-lock.json
 
 cache/
 .idea/

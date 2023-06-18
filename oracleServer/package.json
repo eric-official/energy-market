@@ -1,0 +1,19 @@
+{
+  "name": "oracleserver",
+  "version": "1.0.0",
+  "description": "This package returns the electricity spot prices",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@nomiclabs/hardhat-waffle": "^2.0.6",
+    "axios": "^1.4.0",
+    "ethereumjs-wallet": "^1.0.2",
+    "express": "^4.18.2",
+    "hardhat": "^2.15.0",
+    "hardhat-waffle": "^0.0.1-security"
+  }
+}
