@@ -4,11 +4,11 @@ import "contracts/energyContracts/RenewableProviderPool.sol";
 
 contract ElectricityTradingHub {
 
-    RenewableProviderPool private pool;
+    RenewableProviderPool pool;
     // Stub variable; Subsititute with oracles
-    uint16 private co2PricePerTonInCent = 80 * 100;
-    uint16 private gramCo2PerKwH = 233;
-    uint16 private spotPriceInCent = 30;
+    uint16 co2PricePerTonInCent = 80 * 100;
+    uint16 gramCo2PerKwH = 233;
+    uint16 spotPriceInCent = 30;
 
     struct Provisioning {
         address payable provider;
@@ -23,7 +23,7 @@ contract ElectricityTradingHub {
         uint256 rear;
     }
     
-    Queue private queue;
+    Queue queue;
 
     constructor() {
         // Set the calling EOA as distributer for triggering the distirubtion of the premium
@@ -35,7 +35,7 @@ contract ElectricityTradingHub {
     *
     * @param value the context data like address, if renewable and how much energy is provisioned
     */
-    function enqueue(Provisioning memory value) private {
+    function enqueue(Provisioning memory value) public {
         queue.data.push(value);
         queue.exists[queue.data.length - 1] = true;
         queue.rear = queue.data.length - 1;
@@ -46,7 +46,7 @@ contract ElectricityTradingHub {
     *
     * @return the context data for energy provisioning
     */
-    function dequeue() private returns (Provisioning memory) {
+    function dequeue() public returns (Provisioning memory) {
         require(!isEmpty(), "Queue is empty");
         
         uint256 front = queue.front;
@@ -56,11 +56,11 @@ contract ElectricityTradingHub {
         return queue.data[front];
     }
 
-    function isEmpty() private view returns (bool) {
+    function isEmpty() public view returns (bool) {
         return queue.front > queue.rear || queue.data.length == 0;
     }
 
-    function getQueueLength() private view returns (uint256) {
+    function getQueueLength() public view returns (uint256) {
         return queue.rear - queue.front + 1;
     }
 
@@ -85,7 +85,7 @@ contract ElectricityTradingHub {
     *
     * @param amountInKwH the amount of kilowatt-hours to consume
     */
-    function getPriceInCents(uint32 amountInKwH) private view returns(uint32) {
+    function getPriceInCents(uint32 amountInKwH) public view returns(uint32) {
         return amountInKwH * spotPriceInCent + getPremium(amountInKwH);
     }
 
@@ -94,7 +94,7 @@ contract ElectricityTradingHub {
     *
     * @param amountInKwH the amount of kilowatt-hours to consume
     */
-    function getPremium(uint32 amountInKwH) private view returns(uint32) {
+    function getPremium(uint32 amountInKwH) public view returns(uint32) {
         return amountInKwH * co2PricePerTonInCent * gramCo2PerKwH / 1000;
     }
 
