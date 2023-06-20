@@ -1,5 +1,7 @@
 import {getContract} from "./BasicQuery";
 import { ethAddress, ethABI } from '../utils/constants'
+import { ethers } from 'ethers'
+
 
 // Get PriceInCents from ElectricityTradingHub.sol contract
 async function getSpotPriceInCent() {
@@ -28,7 +30,6 @@ async function getQueueSum() {
 
 async function provide() {
     const contract = await getContract(ethAddress, ethABI)
-    console.log(contract)
     try {
         await contract.provide(100, true);
     } catch (error) {
@@ -39,12 +40,12 @@ async function provide() {
 async function consume() {
     const contract = await getContract(ethAddress, ethABI)
     try {
-        await contract.consume(100);
+        const overrides = { value: 1000000000000 };
+        await contract.consume(1, overrides)
     } catch (error) {
         console.error(error);
     }
 }
-
 
 
 export {

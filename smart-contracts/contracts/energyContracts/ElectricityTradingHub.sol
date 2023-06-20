@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.7.0 <0.9.0;
-import "contracts/energyContracts/RenewableProviderPool.sol";
+import "./RenewableProviderPool.sol";
+import "hardhat/console.sol";
 
 contract ElectricityTradingHub {
 
@@ -17,17 +18,20 @@ contract ElectricityTradingHub {
     }
 
     struct Queue {
-        Provisioning[] data;
-        mapping(uint256 => bool) exists;
+        mapping(uint256 => Provisioning) data;
         uint256 front;
         uint256 rear;
+        uint256 len;
     }
-    
+
     Queue queue;
 
-    constructor() {
+    constructor() payable {
         // Set the calling EOA as distributer for triggering the distirubtion of the premium
         pool = new RenewableProviderPool(msg.sender);
+        queue.front = 1;
+        queue.rear = 0;
+        queue.len = 0;
     }
 
     /**
@@ -36,9 +40,9 @@ contract ElectricityTradingHub {
     * @param value the context data like address, if renewable and how much energy is provisioned
     */
     function enqueue(Provisioning memory value) public {
-        queue.data.push(value);
-        queue.exists[queue.data.length - 1] = true;
-        queue.rear = queue.data.length - 1;
+        queue.rear += 1;
+        queue.data[queue.rear] = value;
+        queue.len += 1;
     }
 
     /**
@@ -47,17 +51,14 @@ contract ElectricityTradingHub {
     * @return the context data for energy provisioning
     */
     function dequeue() public returns (Provisioning memory) {
-        require(!isEmpty(), "Queue is empty");
-        
-        uint256 front = queue.front;
-        delete queue.exists[front];
-        queue.front++;
-        
-        return queue.data[front];
-    }
+        require(queue.rear >= queue.front, "Queue is empty");
 
-    function isEmpty() public view returns (bool) {
-        return queue.front > queue.rear || queue.data.length == 0;
+        Provisioning memory value = queue.data[queue.front];
+        delete queue.data[queue.front];
+        queue.front += 1;
+        queue.len -= 1;
+
+        return value;
     }
 
     function getQueueLength() public view returns (uint256) {
@@ -65,7 +66,11 @@ contract ElectricityTradingHub {
     }
 
     function getQueue() public view returns (Provisioning[] memory) {
-        return queue.data;
+        Provisioning[] memory dataArray = new Provisioning[](queue.len);
+        for(uint i = 0; i < queue.len; i++) {
+            dataArray[i] = queue.data[i];
+        }
+        return dataArray;
     }
 
     function getCo2PricePerTonInCent() public view returns (uint16) {
@@ -79,7 +84,7 @@ contract ElectricityTradingHub {
     function getSpotPriceInCent() public view returns (uint16) {
         return spotPriceInCent;
     }
-    
+
     /**
     * Calculates the overall price depending on the usage and the oracle data
     *
@@ -103,42 +108,28 @@ contract ElectricityTradingHub {
     *
     * @param amountInKwH the amount of kilowatt-hours to consume
     */
-    function consume(uint32 amountInKwH) public payable{
-        uint totalPrice = getPriceInCents(amountInKwH);
+    function consume(uint32 amountInKwH) public payable {
+        uint totalPrice = 1000000000000 wei;
 
         require(msg.value >= totalPrice);
-        
-        for (uint256 i = queue.front; i <= queue.rear && amountInKwH >= 0; i++) {
-            require(queue.exists[i], "Not enough energy providers in the network.");
-            Provisioning memory provisioning = dequeue();
-
-            uint32 consumedKwH = 0;
-            if (amountInKwH - provisioning.kwhAmount >= 0) {
-                consumedKwH = provisioning.kwhAmount;
-                amountInKwH -= provisioning.kwhAmount;
+        uint32 consumedKwH = 0;
+        Provisioning memory provisioning = queue.data[queue.front];
+        while (consumedKwH != amountInKwH) {
+            if (amountInKwH  - consumedKwH >= provisioning.kwhAmount) {
+                consumedKwH += provisioning.kwhAmount - consumedKwH;
+                dequeue();
+                provisioning = queue.data[queue.front];
             } else {
-                consumedKwH = amountInKwH;
-                provisioning.kwhAmount = provisioning.kwhAmount - amountInKwH;
+                queue.data[queue.front].kwhAmount = provisioning.kwhAmount - amountInKwH + consumedKwH;
+                provisioning.kwhAmount -= amountInKwH - consumedKwH;
+                consumedKwH += amountInKwH - consumedKwH;
 
-                // Update the
-                enqueue(provisioning);
             }
-
-            uint32 price = 0;
-            if (provisioning.isRenewable) {
-                price = getPriceInCents(amountInKwH);            
-                provisioning.provider.transfer(price);
-                pool.changeProvidedEnergy(msg.sender, consumedKwH);
-            } else {
-                price = amountInKwH * spotPriceInCent;                
-                provisioning.provider.transfer(price);
-                
-                // Add premium
-                uint32 premium = getPremium(consumedKwH);       
-                provisioning.provider.transfer(premium);
-            }
-
         }
+
+        provisioning.provider.transfer(totalPrice);
+        pool.changeProvidedEnergy(msg.sender, consumedKwH);
+
     }
 
     /**
