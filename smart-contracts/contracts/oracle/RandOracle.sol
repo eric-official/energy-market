@@ -53,14 +53,36 @@ contract RandOracle is AccessControl {
     }
 
 
-    function requestRandomNumber() external returns (uint256) {
+    function requestCo2PricePerTon() external returns (uint256) {
         require(numProviders > 0, " No data providers not yet added.");
 
         randNonce++;
         uint id = uint(keccak256(abi.encodePacked(block.timestamp, msg.sender, randNonce))) % 1000;
         pendingRequests[id] = true;
 
-        emit RandomNumberRequested(msg.sender, id);
+        emit Co2PricePerTonRequested(msg.sender, id);
+        return id;
+    }
+
+    function requestGramCo2PerKwh() external returns (uint256) {
+        require(numProviders > 0, " No data providers not yet added.");
+
+        randNonce++;
+        uint id = uint(keccak256(abi.encodePacked(block.timestamp, msg.sender, randNonce))) % 1000;
+        pendingRequests[id] = true;
+
+        emit Co2PerKwhRequested(msg.sender, id);
+        return id;
+    }
+
+    function requestSpotPrice() external returns (uint256) {
+        require(numProviders > 0, " No data providers not yet added.");
+
+        randNonce++;
+        uint id = uint(keccak256(abi.encodePacked(block.timestamp, msg.sender, randNonce))) % 1000;
+        pendingRequests[id] = true;
+
+        emit SpotPriceRequested(msg.sender, id);
         return id;
     }
 
@@ -92,12 +114,18 @@ contract RandOracle is AccessControl {
     }
 
     // Events
-    event RandomNumberRequested(address callerAddress, uint id);
-    event RandomNumberReturned(uint256 randomNumber, address callerAddress, uint id);
+    event Co2PricePerTonRequested(address callerAddress, uint id);
+    event Co2PricePerTonReturned(uint256 co2PricePerTon, address callerAddress, uint id);
+    
+    event Co2PerKwhRequested(address callerAddress, uint id);
+    event Co2PerKwhReturned(uint256 co2PricePerKwh, address callerAddress, uint id);
+    
+    
+    event SpotPriceRequested(address callerAddress, uint id);
+    event SpotPriceReturned(uint256 spotPrice, address callerAddress, uint id);
+
     event ProviderAdded(address providerAddress);
     event ProviderRemoved(address providerAddress);
     event ProvidersThresholdChanged(uint threshold);
-
-
 
 }

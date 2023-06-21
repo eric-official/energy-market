@@ -1,15 +1,28 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.7.0 <0.9.0;
 import "./RenewableProviderPool.sol";
+import "./BaseFeePool.sol";
 import "hardhat/console.sol";
 
 contract ElectricityTradingHub {
 
-    RenewableProviderPool pool;
-    // Stub variable; Subsititute with oracles
-    uint16 co2PricePerTonInCent = 80 * 100;
-    uint16 gramCo2PerKwH = 233;
-    uint16 spotPriceInCent = 30;
+    // Collapse smart contract to safe tx-costs --------------
+
+    // For renewable distribution
+    address[] private renewableProviders;
+    mapping(address => uint32) private provisionedElectricity;
+    uint32 private totalkwH;
+    
+    // For base fee distributions
+    address[] private baseFeeProviders;
+    mapping(address => uint256) private energyPriceClaim;
+    
+    // -------------------------------------------------------
+
+    Caller tradingContext;
+    // uint16 co2PricePerTonInCent = 80 * 100;
+    // uint16 gramCo2PerKwH = 233;
+    // uint16 spotPriceInCent = 30;
 
     struct Provisioning {
         address payable provider;
@@ -26,12 +39,20 @@ contract ElectricityTradingHub {
 
     Queue queue;
 
+    address owner;
+
     constructor() payable {
         // Set the calling EOA as distributer for triggering the distirubtion of the premium
-        pool = new RenewableProviderPool(msg.sender);
+        renewableProviderPool = new RenewableProviderPool(msg.sender);
         queue.front = 1;
         queue.rear = 0;
         queue.len = 0;
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner {
+        require(msg.sender == owner, "Function can only be invoked by");
+        _;
     }
 
     /**
@@ -73,16 +94,16 @@ contract ElectricityTradingHub {
         return dataArray;
     }
 
-    function getCo2PricePerTonInCent() public view returns (uint16) {
-        return co2PricePerTonInCent;
+    function getCo2PricePerTon() public view returns (uint16) {
+        return this.tradingContext.requestCo2PricePerTon();
     }
 
     function getGramCo2PerKwH() public view returns (uint16) {
-        return gramCo2PerKwH;
+        return this.tradingContext.requestGramCo2PerKwh();
     }
 
-    function getSpotPriceInCent() public view returns (uint16) {
-        return spotPriceInCent;
+    function getSpotPrice() public view returns (uint16) {
+        return this.tradingContext.requestSpotPrice();
     }
 
     /**
@@ -90,8 +111,12 @@ contract ElectricityTradingHub {
     *
     * @param amountInKwH the amount of kilowatt-hours to consume
     */
-    function getPriceInCents(uint32 amountInKwH) public view returns(uint32) {
-        return amountInKwH * spotPriceInCent + getPremium(amountInKwH);
+    function getPrice(uint32 amountInKwH) public view returns(uint32) {
+        return getBasePrice(amountInKwH) + getPremium(amountInKwH);
+    }
+
+    function getBasePrice(uint32 amountInKwH) public view returns(uint32) {
+        return amountInKwH * getSpotPriceInCent();
     }
 
     /**
@@ -100,7 +125,7 @@ contract ElectricityTradingHub {
     * @param amountInKwH the amount of kilowatt-hours to consume
     */
     function getPremium(uint32 amountInKwH) public view returns(uint32) {
-        return amountInKwH * co2PricePerTonInCent * gramCo2PerKwH / 1000;
+        return amountInKwH * getCo2PricePerTon() * getGramCo2PerKwH() / 1000;
     }
 
     /**
@@ -109,27 +134,38 @@ contract ElectricityTradingHub {
     * @param amountInKwH the amount of kilowatt-hours to consume
     */
     function consume(uint32 amountInKwH) public payable {
-        uint totalPrice = 1000000000000 wei;
+        uint totalPrice = getPrice(amountInKwH);
 
         require(msg.value >= totalPrice);
         uint32 consumedKwH = 0;
-        Provisioning memory provisioning = queue.data[queue.front];
+        uint32 lastConsumedAmount = 0;
+
         while (consumedKwH != amountInKwH) {
-            if (amountInKwH  - consumedKwH >= provisioning.kwhAmount) {
-                consumedKwH += provisioning.kwhAmount - consumedKwH;
-                dequeue();
-                provisioning = queue.data[queue.front];
+            require(queue.front != queue.back, "Energy consumption unsatiable. Only " + consumedKwH + " can be provided.");
+
+            Provisioning memory provisioning = dequeue();
+            if (amountInKwH - consumedKwH >= provisioning.kwhAmount) {
+                consumedKwH += provisioning.kwhAmount;       
             } else {
-                queue.data[queue.front].kwhAmount = provisioning.kwhAmount - amountInKwH + consumedKwH;
+                // Decrease rest energy needed (this is the last loop iteration)
                 provisioning.kwhAmount -= amountInKwH - consumedKwH;
                 consumedKwH += amountInKwH - consumedKwH;
 
+                // Put the provisioning back at the end of the queue
+                enqueue(provisioning); 
             }
+
+            uint32 price = 0;
+            uint32 loopDelta = consumedKwH - lastConsumedAmount;
+            if (provisioning.isRenewable) {
+                // Add provided energy to pool for later distrrubtion
+                uint32 premium = getPremium(loopDelta);     
+                changeProvidedEnergy(msg.sender, loopDelta);
+            } 
+
+            addBaseFeeClaim(provisioning.provider, getBasePrice(loopDelta));
+            lastConsumedAmount = consumedKwH;
         }
-
-        provisioning.provider.transfer(totalPrice);
-        pool.changeProvidedEnergy(msg.sender, consumedKwH);
-
     }
 
     /**
@@ -147,4 +183,72 @@ contract ElectricityTradingHub {
 
         enqueue(provisioning);
     }
+
+    // Helper functions for base fee + premium distribution ------------------------
+
+    /**
+    * Add the provided energy for provider and, if applicable, add them to the pool.
+    */
+    function addBaseFeeClaim(address provider, uint256 baseFee) {
+  
+        if (energyPriceClaim[provider] == 0) {
+            providers.push(provider);
+        }
+        energyPriceClaim[provider] += baseFee;
+    }
+
+    /**
+    * Distributes the stored premium amount the providers.    
+    */
+    function distributeBaseFee() public payable onlyOwner {
+
+        for (uint256 i = 0; i < baseFeeProviders.length; i++) {
+            address payable provider = payable(baseFeeProviders[i]);
+            uint256 claim = energyPriceClaim[provider];
+
+            // Transfer part of the overall premium 
+            provider.transfer(claim);
+
+            // Reset provided value
+            delete energyPriceClaim[provider];
+        }
+
+        providers = new address[](0);
+    }
+
+
+    /**
+    * Add the provided energy for provider and, if applicable, add them to the pool.
+    */
+    function changeProvidedEnergy(address provider, uint32 kwhAmount)  {
+        totalkwH += kwhAmount;
+        if (provisionedElectricity[provider] == 0) {
+            providers.push(provider);
+        }
+        provisionedElectricity[provider] += kwhAmount;
+    }
+
+    /**
+    * Distributes the stored premium amount the providers.    
+    */
+    function distributePremium() public payable onlyOwner {
+
+        uint256 balance = address(this).balance;
+
+        for (uint256 i = 0; i < renewableProviders.length; i++) {
+            address provider = renewableProviders[i];
+            uint32 kwhProvided = provisionedElectricity[provider];
+            uint32 provisionedFactor = kwhProvided / totalkwH;
+
+            // Transfer part of the overall premium 
+            payable(provider).transfer(balance * provisionedFactor);
+
+            // Reset provided value
+            delete provisionedElectricity[provider];
+        }
+
+        totalkwH = 0;
+        renewableProviders = new address[](0);
+    }
+
 }
