@@ -1,4 +1,4 @@
-function convertEurToEth(eur) {
+async function convertEurToEth(eur) {
     
     try {
         const response = await fetch("https://api.binance.com/api/v3/avgPrice?symbol=ETHEUR");
@@ -9,11 +9,10 @@ function convertEurToEth(eur) {
     
         const data = await response.json();
         return eur / parseFloat(data.price);
-      } catch (error) {
-        console.error('Error:', error.message);
-        return null;
-      }
-  },
+    } catch (error) {
+    console.error('Error:', error.message);
+    return null;
+    }
 }
 
 const ETHER_TO_WEI = 1000000000000000000;
@@ -146,13 +145,13 @@ App = {
           return null;
         }
     },
-    getPricePerTonOfCo2: function() {
-        return convertEurToEth(80) * ETHER_TO_WEI;
+    getPricePerTonOfCo2: async function() {
+        return (await convertEurToEth(80)) * ETHER_TO_WEI;
     },
-    getSpotPrice: function() {
+    getSpotPrice: async function() {
         // Generate random spot price from 0 - 1 by random walking based on the latest calculation
         App.spotPrice = Math.max(0, Math.min(1, App.spotPrice + Math.random() ))  * ETHER_TO_WEI;
-        return App.spotPrice;
+        return (await convertEurToEth(App.spotPrice)) * ETHER_TO_WEI;;
     }
       
   };
