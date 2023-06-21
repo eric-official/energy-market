@@ -9,6 +9,7 @@ contract TradingContextOracle is AccessControl {
 
     uint private numProviders = 0;
     uint private providersThreshold = 1;
+    uint private randNonce = 1000;
 
     mapping(uint256=>bool) private pendingRequests;
 

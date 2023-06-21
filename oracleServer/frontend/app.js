@@ -1,7 +1,28 @@
+function convertEurToEth(eur) {
+    
+    try {
+        const response = await fetch("https://api.binance.com/api/v3/avgPrice?symbol=ETHEUR");
+    
+        if (!response.ok) {
+          throw new Error('Request failed with status ' + response.status);
+        }
+    
+        const data = await response.json();
+        return eur / parseFloat(data.price);
+      } catch (error) {
+        console.error('Error:', error.message);
+        return null;
+      }
+  },
+}
+
+const ETHER_TO_WEI = 1000000000000000000;
+
 App = {
     callerAddress: "0x9c3606d3d3A36b334E6Aa09D838967EBf7E30EEF",
     callerContract: null,
     requestedIDs: [],
+    spotPrice: 0.5,
   
     init: async function() {
         if (window.ethereum) {
@@ -103,7 +124,37 @@ App = {
             App.requestedIDs.push(decodedParams['id']);
         });
     },
-
+    getCarbonIntensity: async function () {
+        const url = 'https://api.electricitymap.org/v3/carbon-intensity/history?zone=DE';
+        const authToken = '6sBq4QDKtIihcx3KtZas54UGzDSi9JvR';
+      
+        try {
+          const response = await fetch(url, {
+            headers: {
+              'auth-token': authToken
+            }
+          });
+      
+          if (!response.ok) {
+            throw new Error('Request failed with status ' + response.status);
+          }
+      
+          const data = await response.json();
+          return data.carbonIntensity;
+        } catch (error) {
+          console.error('Error:', error.message);
+          return null;
+        }
+    },
+    getPricePerTonOfCo2: function() {
+        return convertEurToEth(80) * ETHER_TO_WEI;
+    },
+    getSpotPrice: function() {
+        // Generate random spot price from 0 - 1 by random walking based on the latest calculation
+        App.spotPrice = Math.max(0, Math.min(1, App.spotPrice + Math.random() ))  * ETHER_TO_WEI;
+        return App.spotPrice;
+    }
+      
   };
   
 App.init();
