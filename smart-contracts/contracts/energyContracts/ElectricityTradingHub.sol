@@ -25,6 +25,7 @@ contract ElectricityTradingHub {
     }
 
     Queue queue;
+    mapping(address => uint32) public energyBalance;
 
     constructor() payable {
         // Set the calling EOA as distributer for triggering the distirubtion of the premium
@@ -71,6 +72,10 @@ contract ElectricityTradingHub {
             dataArray[i] = queue.data[i];
         }
         return dataArray;
+    }
+
+    function getAccountEnergyBalance() public view returns (uint32) {
+        return energyBalance[msg.sender];
     }
 
     function getCo2PricePerTonInCent() public view returns (uint16) {
@@ -129,6 +134,7 @@ contract ElectricityTradingHub {
 
         provisioning.provider.transfer(totalPrice);
         pool.changeProvidedEnergy(msg.sender, consumedKwH);
+        energyBalance[msg.sender] += amountInKwH;
 
     }
 

@@ -4,6 +4,10 @@ import WalletCard from "./components/WalletCard";
 import PoolAmountCard from "./components/PoolAmountCard";
 import ProvideCard from "./components/ProvideCard";
 import ConsumeCard from "./components/ConsumeCard";
+import EnergyBalanceCard from "./components/EnergyBalanceCard";
+import { CountdownCircleTimer } from 'react-countdown-circle-timer'
+
+import ETHBalanceCard  from "./components/ETHBalanceCard";
 import TotalSpent from "views/admin/default/components/TotalSpent";
 import PieChartCard from "views/admin/default/components/PieChartCard";
 import { IoMdHome } from "react-icons/io";
@@ -20,16 +24,37 @@ import TaskCard from "views/admin/default/components/TaskCard";
 import tableDataCheck from "./variables/tableDataCheck.json";
 import tableDataComplex from "./variables/tableDataComplex.json";
 
+
 const Dashboard = () => {
   return (
     <div>
       {/* Card widget */}
 
       <div className="mt-3 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3 3xl:grid-cols-6">
-        <WalletCard/>
-        <PoolAmountCard/>
-        <ProvideCard/>
-        <ConsumeCard/>
+          <WalletCard/>
+          <PoolAmountCard/>
+          <ProvideCard/>
+          <ConsumeCard/>
+          <CountdownCircleTimer
+              isPlaying={true}
+              duration={60 * 15}
+              colors={['#004777', '#F7B801', '#A30000', '#A30000']}
+              colorsTime={[7, 5, 2, 0]}
+              children={(remainingTime ) => {
+                  const minutes = Math.floor(remainingTime / 60)
+                  const seconds = remainingTime % 60
+                  return `${minutes}:${seconds}`}}
+              onComplete={() => {
+                  // do your stuff here
+                  return { shouldRepeat: true}
+              }}
+          >
+              {({ remainingTime }) => {
+                  const minutes = Math.floor(remainingTime / 60)
+                  const seconds = remainingTime % 60
+                  return `${minutes}:${seconds}`}}
+          </CountdownCircleTimer>
+          <EnergyBalanceCard/>
         {/*
         <Widget
           icon={<MdBarChart className="h-7 w-7" />}
