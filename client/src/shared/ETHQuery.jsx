@@ -38,6 +38,16 @@ async function getAccountEnergyBalance() {
     }
 }
 
+async function getMonthlySpending() {
+    const contract = await getContract(ethAddress, ethABI)
+    try {
+        const energy_balance = await contract.getAccountEnergyBalance();
+        return Promise.resolve(energy_balance);
+    } catch (error) {
+        console.error(error);
+    }
+}
+
 async function provide() {
     const contract = await getContract(ethAddress, ethABI)
     try {

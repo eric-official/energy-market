@@ -53,7 +53,7 @@ async function getBalance(connectedAccount) {
         return 0;
     } else {
         const provider = new ethers.AlchemyProvider("sepolia", "UNdIZtG0dqvQktAMq3ABxntm1eAu-mXL");
-        const wei_balance = await provider.getBalance("0x613A19b991292b973e1E8e01C12280961aCd997A");
+        const wei_balance = await provider.getBalance(connectedAccount);
         const eth_balance = ethers.formatEther(wei_balance);
         return eth_balance;
     }

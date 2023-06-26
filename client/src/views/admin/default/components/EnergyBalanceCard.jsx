@@ -6,10 +6,8 @@ import {useGlobalState} from "../../../../shared/dataStore";
 const EnergyBalanceCard = () => {
 
     const [balance, setBalance] = useState()
-    const [connectedAccount] = useGlobalState('connectedAccount')
     useEffect( () => {
         async function loadBalance() {
-            console.log("acc", connectedAccount + "!")
             const energy_balance = await getAccountEnergyBalance()
             setBalance(energy_balance)
         }

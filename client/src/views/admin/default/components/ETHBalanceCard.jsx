@@ -3,18 +3,16 @@ import React, { useEffect, useState } from 'react';
 import { getBalance } from "../../../../shared/BasicQuery";
 import {useGlobalState} from "../../../../shared/dataStore";
 
-const ETHBalanceCard = () => {
+const ETHBalanceCard = ({connectedAccount}) => {
 
     const [balance, setBalance] = useState()
-    const [connectedAccount] = useGlobalState('connectedAccount')
     useEffect( () => {
-        async function loadBalance() {
-            console.log("acc", connectedAccount + "!")
-            const balance = await getBalance()
-            setBalance(balance)
+        async function loadBalance(connectedAccount) {
+            const eth_balance = await getBalance(connectedAccount)
+            setBalance(eth_balance)
         }
-        loadBalance()
-    }, [])
+        loadBalance(connectedAccount)
+    }, [connectedAccount])
 
     return (
         <Card extra="!flex-row flex-grow items-center rounded-[20px]">
