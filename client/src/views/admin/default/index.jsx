@@ -24,6 +24,7 @@ import TaskCard from "views/admin/default/components/TaskCard";
 import tableDataCheck from "./variables/tableDataCheck.json";
 import tableDataComplex from "./variables/tableDataComplex.json";
 import {useGlobalState} from "../../../shared/dataStore";
+import MonthlySpendCard from "./components/MonthlySpendCard";
 
 
 const Dashboard = () => {
@@ -35,8 +36,8 @@ const Dashboard = () => {
             <div className="mt-3 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3 3xl:grid-cols-6">
                 <WalletCard/>
                 <PoolAmountCard/>
-                <ProvideCard/>
-                <ConsumeCard/>
+                <ProvideCard connectedAccount={connectedAccount}/>
+                <ConsumeCard connectedAccount={connectedAccount}/>
                 <CountdownCircleTimer
                     isPlaying={true}
                     duration={60 * 15}
@@ -59,7 +60,8 @@ const Dashboard = () => {
                     }}
                 </CountdownCircleTimer>
                 <ETHBalanceCard connectedAccount={connectedAccount}/>
-                <EnergyBalanceCard/>
+                <EnergyBalanceCard connectedAccount={connectedAccount}/>
+                <MonthlySpendCard connectedAccount={connectedAccount}/>
                 {/*
         <Widget
           icon={<MdBarChart className="h-7 w-7" />}
