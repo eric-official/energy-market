@@ -108,7 +108,7 @@ npx hardhat run provider --network sepolia
 ```
 ### Smart Contract 
 
-![Oracle Architecture](images/oracle-architecture.png)
+![Oracle Architecture](images/oracle_architecture.png)
 
 Currently for our project, we are using Hardhat as the ethereum development environment. For the development purpose, we are using the sepolia testnet. Everything is automated and already configured throught hardhat config files to deploy to the testnet.
 
