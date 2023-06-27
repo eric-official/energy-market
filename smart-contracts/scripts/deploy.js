@@ -1,24 +1,35 @@
 const hre = require('hardhat')
 const fs = require('fs');
+const path = "./scripts/deployedContracts.json";
+
 
 const deployContracts = async () => {
   let deployedContracts = {}
 
-  // Deploy ElectricityTradingHub
-  const ethFactory = await hre.ethers.getContractFactory('ElectricityTradingHub')
-  const ethContract = await ethFactory.deploy()
-  await ethContract.deployed()
-  deployedContracts["ElectricityTradingHub"] = ethContract.address
-  console.log('ElectricityTradingHub deployed to:', ethContract.address)
+    // Deploy ElectricityTradingHub
+  const callerFactory = await hre.ethers.getContractFactory('Caller')
+  const callerContract = await callerFactory.deploy()
+  await callerContract.deployed()
+  deployedContracts["Caller"] = callerContract.address
+  console.log('Caller deployed to:', callerContract.address)
 
-  // Deploy RenewableProviderPool
-  // const rppFactory = await hre.ethers.getContractFactory('RenewableProviderPool')
-  // const rppContract = await rppFactory.deploy()
-  // await rppContract.deployed()
-  // deployedContracts["RenewableProviderPool"] = rppContract.address
-  // console.log('RenewableProviderPool deployed to:', rppContract.address)
+      // Deploy ElectricityTradingHub
+  const oracleFactory = await hre.ethers.getContractFactory('ElectricityDataOracle')
+  const oracleContract = await oracleFactory.deploy()
+  await oracleContract.deployed()
+  deployedContracts["ElectricityDataOracle"] = oracleContract.address
+  console.log('ElectricityDataOracle deployed to:', oracleContract.address)
 
-  return JSON.stringify(deployedContracts);
+  // Call the setElectricityOracleAddress function on the Caller contract
+  await callerContract.setElectricityOracleAddress(oracleContract.address)
+
+  // Get the deployer's account
+  const [deployerAccount] = await hre.ethers.getSigners();
+
+  // Call the addProvider function on the ElectricityDataOracle contract
+  await oracleContract.addProvider(deployerAccount.address)
+  
+  return deployedContracts;
 }
 
 const runDeployContracts = async () => {
@@ -31,9 +42,22 @@ const runDeployContracts = async () => {
 }
 
 const awaitDeployContracts = async () => {
-  const deployedContracts = await runDeployContracts()
-  console.log(deployedContracts)
-  fs.writeFile("./scripts/deployedContracts.json", deployedContracts, (error) => {
+  const newDeployedContracts = await runDeployContracts()
+  let deployedContracts = {};
+  console.log("newDeployedContracts",newDeployedContracts)
+
+  // Check if file already exists
+  if(fs.existsSync(path)) {
+    // Read the file
+    let rawdata = fs.readFileSync(path);
+    deployedContracts = JSON.parse(rawdata);
+  }
+
+  // Merge new contracts
+  deployedContracts = { ...deployedContracts, ...newDeployedContracts };
+  
+  // Save to the file
+  fs.writeFileSync(path, JSON.stringify(deployedContracts), (error) => {
     if (error) {
       console.error(error);
       throw error;

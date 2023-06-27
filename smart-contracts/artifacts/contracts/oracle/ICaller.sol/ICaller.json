@@ -7,7 +7,12 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "randomNumber",
+          "name": "carbonIntensity",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "priceCarbon",
           "type": "uint256"
         },
         {
@@ -16,7 +21,7 @@
           "type": "uint256"
         }
       ],
-      "name": "fulfillRandomNumberRequest",
+      "name": "fulfillElectricityDataRequest",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

@@ -1,11 +1,11 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "IRandOracle",
-  "sourceName": "contracts/energyContracts/IRandOracle.sol",
+  "contractName": "IElectricityOracle",
+  "sourceName": "contracts/energyContracts/IElectricityOracle.sol",
   "abi": [
     {
       "inputs": [],
-      "name": "requestRandomNumber",
+      "name": "requestElectricityData",
       "outputs": [
         {
           "internalType": "uint256",

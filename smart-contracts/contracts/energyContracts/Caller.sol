@@ -1,44 +1,50 @@
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.7.0 <0.9.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./IRandOracle.sol";
+import "./IElectricityOracle.sol";
 
 contract Caller is Ownable {
-    IRandOracle private randOracle;
+    IElectricityOracle private electricityOracle;
 
     mapping(uint256=>bool)  requests;
-    mapping(uint256=>uint256) results;
+    mapping(uint256=>ElectricityData) results;
+
+    struct ElectricityData {
+        uint256 carbonIntensity; // 
+        uint256 priceCarbon; // in kWh
+    }
     
-    modifier onlyRandOracle() {
-        require(msg.sender == address(randOracle), "Unauthorized.");
+    modifier onlyElectricityOracle() {
+        require(msg.sender == address(electricityOracle), "Unauthorized.");
         _;
     }
 
-    function setRandOracleAddress(address newAddress) external onlyOwner {
-        randOracle = IRandOracle(newAddress);
+    function setElectricityOracleAddress(address newAddress) external onlyOwner {
+        electricityOracle = IElectricityOracle(newAddress);
 
         emit OracleAddressChanged(newAddress);
     }
 
-    function getRandomNumber() external {
-        require(randOracle != IRandOracle(address(0)), "Oracle not initialized.");
+    function getElectricityData() external {
+        require(electricityOracle != IElectricityOracle(address(0)), "Oracle not initialized.");
 
-        uint256 id = randOracle.requestRandomNumber();
+        uint256 id = electricityOracle.requestElectricityData();
         requests[id] = true;
 
-        emit RandomNumberRequested(id);
+        emit ElectricityDataRequested(id);
     }
 
-    function fulfillRandomNumberRequest(uint256 randomNumber, uint256 id) external onlyRandOracle {
+    function fulfillElectricityDataRequest(uint256 carbonIntensity, uint256 priceCarbon, uint256 id) external onlyElectricityOracle {
         require(requests[id], "Request is invalid or already fulfilled.");
 
-        results[id] = randomNumber;
+        results[id] = ElectricityData(carbonIntensity, priceCarbon);
         delete requests[id];
 
-        emit RandomNumberReceived(randomNumber, id);
+        emit ElectricityDataReceived(carbonIntensity, priceCarbon, id);
     }
 
     event OracleAddressChanged(address oracleAddress);
-    event RandomNumberRequested(uint256 id);
-    event RandomNumberReceived(uint256 number, uint256 id);
+    event ElectricityDataRequested(uint256 id);
+    event ElectricityDataReceived(uint256 carbonIntensity, uint256 priceCarbon, uint256 id);
 }

@@ -4,7 +4,7 @@ pragma solidity >=0.7.0 <0.9.0;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./ICaller.sol";
 
-contract RandOracle is AccessControl {
+contract ElectricityDataOracle is AccessControl {
     bytes32 public constant PROVIDER_ROLE = keccak256("PROVIDER_ROLE");
 
     uint private numProviders = 0;
@@ -16,7 +16,8 @@ contract RandOracle is AccessControl {
     struct Response {
         address providerAddress;
         address callerAddress;
-        uint256 randomNumber;
+        uint256 carbonIntensity;
+        uint256 priceCarbon;
     }
 
     mapping(uint256=>Response[]) private idToResponses;
@@ -25,20 +26,22 @@ contract RandOracle is AccessControl {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender); // make the deployer admin
     }
 
-    function returnRandomNumber(uint256 randomNumber, address callerAddress, uint256 id) external onlyRole(PROVIDER_ROLE) {
+    function returnElectricityData(uint256 carbonIntensity, uint256 priceCarbon, address callerAddress, uint256 id) external onlyRole(PROVIDER_ROLE) {
         require(pendingRequests[id], "Request not found.");
 
         // Add newest response to list
-        Response memory res = Response(msg.sender, callerAddress, randomNumber);
+        Response memory res = Response(msg.sender, callerAddress, carbonIntensity, priceCarbon);
         idToResponses[id].push(res);
         uint numResponses = idToResponses[id].length;
         // Check if we've received enough responses
         if (numResponses == providersThreshold) {
-            uint compositeRandomNumber = 0;
+            uint compositeCarbonIntensity = 0;
+            uint compositePriceCarbon = 0;
 
             // Loop through the array and combine responses
             for (uint i=0; i < idToResponses[id].length; i++) {
-                compositeRandomNumber = compositeRandomNumber ^ idToResponses[id][i].randomNumber; // bitwise XOR
+                compositeCarbonIntensity = compositeCarbonIntensity ^ idToResponses[id][i].carbonIntensity; // bitwise XOR
+                compositePriceCarbon = compositePriceCarbon ^ idToResponses[id][i].priceCarbon; 
             }
 
             // Clean up
@@ -46,21 +49,21 @@ contract RandOracle is AccessControl {
             delete idToResponses[id];
 
             // Fulfill request
-            ICaller(callerAddress).fulfillRandomNumberRequest(compositeRandomNumber, id);
+            ICaller(callerAddress).fulfillElectricityDataRequest(compositeCarbonIntensity, compositePriceCarbon, id);
 
-            emit RandomNumberReturned(compositeRandomNumber, callerAddress, id);
+            emit ElectricityDataReturned(compositeCarbonIntensity, compositePriceCarbon, callerAddress, id);
         }
     }
 
 
-    function requestRandomNumber() external returns (uint256) {
+    function requestElectricityData() external returns (uint256) {
         require(numProviders > 0, " No data providers not yet added.");
 
         randNonce++;
         uint id = uint(keccak256(abi.encodePacked(block.timestamp, msg.sender, randNonce))) % 1000;
         pendingRequests[id] = true;
 
-        emit RandomNumberRequested(msg.sender, id);
+        emit ElectricityDataRequested(msg.sender, id);
         return id;
     }
 
@@ -92,8 +95,8 @@ contract RandOracle is AccessControl {
     }
 
     // Events
-    event RandomNumberRequested(address callerAddress, uint id);
-    event RandomNumberReturned(uint256 randomNumber, address callerAddress, uint id);
+    event ElectricityDataRequested(address callerAddress, uint id);
+    event ElectricityDataReturned(uint256 carbonIntensity, uint256 priceCarbon, address callerAddress, uint id);
     event ProviderAdded(address providerAddress);
     event ProviderRemoved(address providerAddress);
     event ProvidersThresholdChanged(uint threshold);
