@@ -25,6 +25,10 @@ contract ElectricityTradingHub {
     }
 
     Queue queue;
+    mapping(address => uint32) public energyBalance;
+
+    event Provide(address indexed provider, uint32 kwhAmount, bool isRenewable, uint256 timestamp);
+    event Consume(address indexed consumer, address indexed provider, uint32 kwhAmount, bool isRenewable, uint256 timestamp);
 
     constructor() payable {
         // Set the calling EOA as distributer for triggering the distirubtion of the premium
@@ -73,6 +77,10 @@ contract ElectricityTradingHub {
         return dataArray;
     }
 
+    function getAccountEnergyBalance(address connectedAccount) public view returns (uint32) {
+        return energyBalance[connectedAccount];
+    }
+
     function getCo2PricePerTonInCent() public view returns (uint16) {
         return co2PricePerTonInCent;
     }
@@ -108,7 +116,7 @@ contract ElectricityTradingHub {
     *
     * @param amountInKwH the amount of kilowatt-hours to consume
     */
-    function consume(uint32 amountInKwH) public payable {
+    function consume(address connectedAccount, uint32 amountInKwH) public payable {
         uint totalPrice = 1000000000000 wei;
 
         require(msg.value >= totalPrice);
@@ -128,7 +136,10 @@ contract ElectricityTradingHub {
         }
 
         provisioning.provider.transfer(totalPrice);
-        pool.changeProvidedEnergy(msg.sender, consumedKwH);
+        pool.changeProvidedEnergy(connectedAccount, consumedKwH);
+        energyBalance[connectedAccount] += amountInKwH;
+
+        emit Consume(connectedAccount, provisioning.provider, amountInKwH, provisioning.isRenewable, block.timestamp);
 
     }
 
@@ -138,13 +149,15 @@ contract ElectricityTradingHub {
     * @param kwhAmount   the amount of kilowatt-hours to be provisioned
     * @param isRenewable a flag indicating whether the energy is renewable or not
     */
-    function provide(uint32 kwhAmount, bool isRenewable) public {
+    function provide(address connectedAccount, uint32 kwhAmount, bool isRenewable) public {
         Provisioning memory provisioning = Provisioning(
-            payable(msg.sender),
+            payable(connectedAccount),
             kwhAmount,
             isRenewable
         );
 
         enqueue(provisioning);
+
+        emit Provide(connectedAccount, kwhAmount, isRenewable, block.timestamp);
     }
 }

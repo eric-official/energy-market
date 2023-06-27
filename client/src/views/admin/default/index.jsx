@@ -4,13 +4,17 @@ import WalletCard from "./components/WalletCard";
 import PoolAmountCard from "./components/PoolAmountCard";
 import ProvideCard from "./components/ProvideCard";
 import ConsumeCard from "./components/ConsumeCard";
+import EnergyBalanceCard from "./components/EnergyBalanceCard";
+import {CountdownCircleTimer} from 'react-countdown-circle-timer'
+
+import ETHBalanceCard from "./components/ETHBalanceCard";
 import TotalSpent from "views/admin/default/components/TotalSpent";
 import PieChartCard from "views/admin/default/components/PieChartCard";
-import { IoMdHome } from "react-icons/io";
-import { IoDocuments } from "react-icons/io5";
-import { MdBarChart, MdDashboard } from "react-icons/md";
+import {IoMdHome} from "react-icons/io";
+import {IoDocuments} from "react-icons/io5";
+import {MdBarChart, MdDashboard} from "react-icons/md";
 
-import { columnsDataCheck, columnsDataComplex } from "./variables/columnsData";
+import {columnsDataCheck, columnsDataComplex} from "./variables/columnsData";
 
 import Widget from "components/widget/Widget";
 import CheckTable from "views/admin/default/components/CheckTable";
@@ -19,18 +23,46 @@ import DailyTraffic from "views/admin/default/components/DailyTraffic";
 import TaskCard from "views/admin/default/components/TaskCard";
 import tableDataCheck from "./variables/tableDataCheck.json";
 import tableDataComplex from "./variables/tableDataComplex.json";
+import {useGlobalState} from "../../../shared/dataStore";
+import MonthlySpendCard from "./components/MonthlySpendCard";
+
 
 const Dashboard = () => {
-  return (
-    <div>
-      {/* Card widget */}
+    const [connectedAccount] = useGlobalState('connectedAccount')
+    return (
+        <div>
+            {/* Card widget */}
 
-      <div className="mt-3 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3 3xl:grid-cols-6">
-        <WalletCard/>
-        <PoolAmountCard/>
-        <ProvideCard/>
-        <ConsumeCard/>
-        {/*
+            <div className="mt-3 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3 3xl:grid-cols-6">
+                <WalletCard/>
+                <PoolAmountCard/>
+                <ProvideCard connectedAccount={connectedAccount}/>
+                <ConsumeCard connectedAccount={connectedAccount}/>
+                <CountdownCircleTimer
+                    isPlaying={true}
+                    duration={60 * 15}
+                    colors={['#004777', '#F7B801', '#A30000', '#A30000']}
+                    colorsTime={[7, 5, 2, 0]}
+                    children={(remainingTime) => {
+                        const minutes = Math.floor(remainingTime / 60)
+                        const seconds = remainingTime % 60
+                        return `${minutes}:${seconds}`
+                    }}
+                    onComplete={() => {
+                        // do your stuff here
+                        return {shouldRepeat: true}
+                    }}
+                >
+                    {({remainingTime}) => {
+                        const minutes = Math.floor(remainingTime / 60)
+                        const seconds = remainingTime % 60
+                        return `${minutes}:${seconds}`
+                    }}
+                </CountdownCircleTimer>
+                <ETHBalanceCard connectedAccount={connectedAccount}/>
+                <EnergyBalanceCard connectedAccount={connectedAccount}/>
+                <MonthlySpendCard connectedAccount={connectedAccount}/>
+                {/*
         <Widget
           icon={<MdBarChart className="h-7 w-7" />}
           title={"Earnings"}
@@ -61,21 +93,21 @@ const Dashboard = () => {
           title={"Total Projects"}
           subtitle={"$2433"}
         /> */}
-      </div>
+            </div>
 
-      {/* Charts */}
-      {/*
+            {/* Charts */}
+            {/*
       <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
         <TotalSpent />
         <WeeklyRevenue />
       </div> */}
 
-      {/* Tables & Charts */}
+            {/* Tables & Charts */}
 
-      <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-2">
+            <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-2">
 
-        {/* Check Table */}
-        {/*
+                {/* Check Table */}
+                {/*
         <div>
           <CheckTable
             columnsData={columnsDataCheck}
@@ -83,31 +115,31 @@ const Dashboard = () => {
           />
         </div> */}
 
-        {/* Traffic chart & Pie Chart */}
-        {/*
+                {/* Traffic chart & Pie Chart */}
+                {/*
         <div className="grid grid-cols-1 gap-5 rounded-[20px] md:grid-cols-2">
           <DailyTraffic />
           <PieChartCard />
         </div> */}
 
-        {/* Complex Table , Task & Calendar */}
-        {/*
+                {/* Complex Table , Task & Calendar */}
+                {/*
         <ComplexTable
           columnsData={columnsDataComplex}
           tableData={tableDataComplex}
         /> */}
 
-        {/* Task chart & Calendar */}
-        {/*
+                {/* Task chart & Calendar */}
+                {/*
         <div className="grid grid-cols-1 gap-5 rounded-[20px] md:grid-cols-2">
           <TaskCard />
           <div className="grid grid-cols-1 rounded-[20px]">
             <MiniCalendar />
           </div>
         </div> */}
-      </div>
-    </div>
-  );
+            </div>
+        </div>
+    );
 };
 
 export default Dashboard;
