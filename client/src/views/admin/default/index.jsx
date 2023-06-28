@@ -27,6 +27,7 @@ import tableDataComplex from "./variables/tableDataComplex.json";
 import {useGlobalState} from "../../../shared/dataStore";
 import MonthlySpendCard from "./components/MonthlySpendCard";
 import MonthlyTrafficCard from "./components/MonthlyTrafficCard";
+import RenewableMixCard from "./components/RenewableMixCard";
 
 
 const Dashboard = () => {
@@ -68,7 +69,7 @@ const Dashboard = () => {
                     }}
                 </CountdownCircleTimer>
                 <MonthlyTrafficCard connectedAccount={connectedAccount}/>
-
+                <RenewableMixCard />
                 {/*
         <Widget
           icon={<MdBarChart className="h-7 w-7" />}
