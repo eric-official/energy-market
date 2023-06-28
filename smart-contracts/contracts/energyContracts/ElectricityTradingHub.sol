@@ -29,6 +29,7 @@ contract ElectricityTradingHub {
 
     event Provide(address indexed provider, uint32 kwhAmount, bool isRenewable, uint256 timestamp);
     event Consume(address indexed consumer, address indexed provider, uint32 kwhAmount, bool isRenewable, uint256 timestamp);
+    event Use(address indexed consumer, uint32 kwhAmount, uint256 timestamp);
 
     constructor() payable {
         // Set the calling EOA as distributer for triggering the distirubtion of the premium
@@ -141,6 +142,14 @@ contract ElectricityTradingHub {
 
         emit Consume(connectedAccount, provisioning.provider, amountInKwH, provisioning.isRenewable, block.timestamp);
 
+    }
+
+    function use(address connectedAccount, uint32 kwhAmount) public {
+        if (kwhAmount > energyBalance[connectedAccount]) {
+            kwhAmount = energyBalance[connectedAccount];
+        }
+        energyBalance[connectedAccount] -= kwhAmount;
+        emit Use(connectedAccount, kwhAmount, block.timestamp);
     }
 
     /**
