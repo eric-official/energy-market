@@ -96,6 +96,39 @@ In order to run the project on your laptop locally, follow the steps:
 
 
 
+### How to run 
+- Oracle server: all the commands should be run from the follwing folder path: `energy-market/oracleServer`
+1. In order to start the frontend to test the oracle server,  and run the following command:
+```
+node frontend.js
+```
+2. In order to start the oracle provider, run the following command:
+```
+npx hardhat run provider --network sepolia 
+```
+### Smart Contract 
+
+![Oracle Architecture](images/oracle_architecture.png)
+
+Currently for our project, we are using Hardhat as the ethereum development environment. For the development purpose, we are using the sepolia testnet. Everything is automated and already configured throught hardhat config files to deploy to the testnet.
+
+All the following commands needs to be executed from the `energy-market/smart-contracts` folder.
+- In order to compile your smart contracts:
+```sh
+ npx hardhat compile
+```
+- In order to deploy your smart contracts:
+```
+npx hardhat run scripts/deploy.js --network sepolia
+
+```
+- Next, you have to update the `oracleServer/provider/electricityDataOracleABI.json` and `oracleServer/frontend/callerABI.js` with the new ABI generated after the deployment. It can be found here: `smart-contracts/artifacts/contracts/energyContracts/`
+
+- Update the new contract address in `energy-market/oracleServer/provider/index.js` and `energy-market/oracleServer/frontend/app.js`
+
+
+
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
@@ -172,7 +205,7 @@ Use this space to list resources you find helpful and would like to give credit 
 [license-url]: https://github.com/othneildrew/Best-README-Template/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/othneildrew
-[product-screenshot]: images/screenshot.png
+[oracle-architecture]: images/oracle-architecture.png
 [Next.js]: https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white
 [Next-url]: https://nextjs.org/
 [React.js]: https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB

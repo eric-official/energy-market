@@ -14,6 +14,7 @@
     "ethereumjs-wallet": "^1.0.2",
     "express": "^4.18.2",
     "hardhat": "^2.15.0",
-    "hardhat-waffle": "^0.0.1-security"
+    "hardhat-waffle": "^0.0.1-security",
+    "node-fetch": "^2.6.11"
   }
 }
