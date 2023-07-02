@@ -70,6 +70,8 @@ contract ElectricityHub {
             invokedByAuction = invokedByAuction || msg.sender == address(currentAuctions[i].auction);            
         }
 
+        require(invokedByAuction, "Change pprovided energy is only invokable by an auction.");
+
         totalkwH += kwhAmount;
         if (provisionedElectricity[provider] == 0) {
             renewableProviders.push(provider);
