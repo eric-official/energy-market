@@ -52,8 +52,8 @@ contract ElectricityAuction {
         _;
     }
 
-    function priceForOneThisAuction() public view onlyEndedAuction returns(uint256) {
-        return secondHighestBid + this.getPremium(1);
+    function priceForThisAuction() public view onlyEndedAuction returns(uint256) {
+        return kwhOffered * secondHighestBid + this.getPremium(kwhOffered);
     }
 
     /**
