@@ -1,0 +1,229 @@
+{
+	"compiler": {
+		"version": "0.8.18+commit.87f61d96"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [],
+				"stateMutability": "nonpayable",
+				"type": "constructor"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "kwhAmount",
+						"type": "uint256"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "newContract",
+						"type": "address"
+					}
+				],
+				"name": "AuctionStarted",
+				"type": "event"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "provider",
+						"type": "address"
+					},
+					{
+						"internalType": "uint32",
+						"name": "kwhAmount",
+						"type": "uint32"
+					}
+				],
+				"name": "changeProvidedEnergy",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "distributePremium",
+				"outputs": [],
+				"stateMutability": "payable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "endMatureAuctions",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getCurrentAuctions",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "start",
+								"type": "uint256"
+							},
+							{
+								"internalType": "contract ElectricityAuction",
+								"name": "auction",
+								"type": "address"
+							}
+						],
+						"internalType": "struct ElectricityHub.Auction[]",
+						"name": "",
+						"type": "tuple[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "kwhAmount",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bool",
+						"name": "isRenewable",
+						"type": "bool"
+					}
+				],
+				"name": "provide",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "upgradeInterval",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {
+				"provide(uint256,bool)": {
+					"params": {
+						"isRenewable": "Flag that indicates if the provided electricity is from a renewable source.",
+						"kwhAmount": "The amount that will be provisioned to the grid."
+					}
+				}
+			},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {
+				"changeProvidedEnergy(address,uint32)": {
+					"notice": "Add the provided energy for provider and, if applicable, add them to the pool."
+				},
+				"distributePremium()": {
+					"notice": "Distributes the stored premium amount the providers.    "
+				},
+				"endMatureAuctions()": {
+					"notice": "End mature auction and remove from current active auctions."
+				},
+				"getCurrentAuctions()": {
+					"notice": "Get all active auctions that can be participated in."
+				},
+				"provide(uint256,bool)": {
+					"notice": "Provide energy to the market and start a new auction."
+				}
+			},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"smart-contracts/contracts/energyContracts/ElectricityHub.sol": "ElectricityHub"
+		},
+		"evmVersion": "paris",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"@openzeppelin/contracts/access/Ownable.sol": {
+			"keccak256": "0xba43b97fba0d32eb4254f6a5a297b39a19a247082a02d6e69349e071e2946218",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://fc980984badf3984b6303b377711220e067722bbd6a135b24669ff5069ef9f32",
+				"dweb:/ipfs/QmPHXMSXj99XjSVM21YsY6aNtLLjLVXDbyN76J5HQYvvrz"
+			]
+		},
+		"@openzeppelin/contracts/utils/Context.sol": {
+			"keccak256": "0xe2e337e6dde9ef6b680e07338c493ebea1b5fd09b43424112868e9cc1706bca7",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://6df0ddf21ce9f58271bdfaa85cde98b200ef242a05a3f85c2bc10a8294800a92",
+				"dweb:/ipfs/QmRK2Y5Yc6BK7tGKkgsgn3aJEQGi5aakeSPZvS65PV8Xp3"
+			]
+		},
+		"hardhat/console.sol": {
+			"keccak256": "0x60b0215121bf25612a6739fb2f1ec35f31ee82e4a8216c032c8243d904ab3aa9",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://6e29880d33dd479bb046ba306993d26ccb779a4b1d94a046cb3567f22948bb4d",
+				"dweb:/ipfs/QmfTY1qzPt5C63Wc7y6JqfZr5899NRvXYdCpyLzR5FXQic"
+			]
+		},
+		"smart-contracts/contracts/energyContracts/Caller.sol": {
+			"keccak256": "0x8ff2795cc9f1aae9cd2f6235d6595e565b53863c293505d3dd22a0e35673cefc",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://30a9b5d0d68b6dbaf6985b09eb33fcf565033ca35b223f22f6d974f0bea526b8",
+				"dweb:/ipfs/QmSfKnjyxrLikJUNmKVQpSnN8QgowB4CcPMYACuDfkMxeR"
+			]
+		},
+		"smart-contracts/contracts/energyContracts/ElectricityAuction.sol": {
+			"keccak256": "0x0121fa84c2b47d9e53f624ab2cdfdbff59eb9265a0b40f0e2ea2b6d723d8cc69",
+			"license": "UNLICENSED",
+			"urls": [
+				"bzz-raw://9dde7bb26a464540fc99ed113da965aae1c86934eabdcb36a5edc37d97d3faba",
+				"dweb:/ipfs/QmZiRSpM8eBHm7egxMQ3xtfPmWieHifHHL3n3rcvPCPGE4"
+			]
+		},
+		"smart-contracts/contracts/energyContracts/ElectricityHub.sol": {
+			"keccak256": "0x14b517765175321b405f647e3ef2a24e4c3534497145fbb14ee026ecf1073c31",
+			"license": "UNLICENSED",
+			"urls": [
+				"bzz-raw://22bbf8105a13207a5b22a03c4c731f2ea86a45b2e82a50963cb71bc6b5f0c9e2",
+				"dweb:/ipfs/QmYmfYke77yYUmJHHDNGQ5Nh8A3F5zTrHFsFEQ3pffbWB2"
+			]
+		},
+		"smart-contracts/contracts/energyContracts/IElectricityOracle.sol": {
+			"keccak256": "0x3954625683d1d688ac481a07b31429b3eabdcb692e806cdec1415d9d8edf520a",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://88ef09fcd88867cb5cdd2933002ffe2b08a56eccbe724cf867a7afcc1d69631c",
+				"dweb:/ipfs/Qmdn5QneSbjsZtQMHFEUR4kqjZzzi9PLZdqL8VF7vrYtaC"
+			]
+		}
+	},
+	"version": 1
+}

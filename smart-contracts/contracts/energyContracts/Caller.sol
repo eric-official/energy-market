@@ -10,6 +10,9 @@ contract Caller is Ownable {
     mapping(uint256=>bool)  requests;
     mapping(uint256=>ElectricityData) results;
 
+    uint256 latestDataRequestTimestamp;
+    uint256 latestId;
+
     struct ElectricityData {
         uint256 carbonIntensity; // 
         uint256 priceCarbon; // in kWh
@@ -26,13 +29,20 @@ contract Caller is Ownable {
         emit OracleAddressChanged(newAddress);
     }
 
-    function getElectricityData() external {
+    function getElectricityData() external returns(ElectricityData memory) {
         require(electricityOracle != IElectricityOracle(address(0)), "Oracle not initialized.");
 
-        uint256 id = electricityOracle.requestElectricityData();
-        requests[id] = true;
+        if (block.timestamp <= latestDataRequestTimestamp + 10 minutes) {
+             
+            uint256 id = electricityOracle.requestElectricityData();
+            requests[id] = true;
 
-        emit ElectricityDataRequested(id);
+            emit ElectricityDataRequested(id);
+
+            latestId = id;
+        }
+
+        return results[latestId];
     }
 
     function fulfillElectricityDataRequest(uint256 carbonIntensity, uint256 priceCarbon, uint256 id) external onlyElectricityOracle {
