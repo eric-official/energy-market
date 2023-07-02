@@ -118,6 +118,7 @@ contract ElectricityAuction {
         } else {
             if (isRenewable) {
                 auctioneer.transfer(overallPrice);
+                electricityHub.changeProvidedEnergy(auctioneer, kwhOffered);
             } else {
                 auctioneer.transfer(secondHighestBid * kwhOffered);
                 payable(address(electricityHub)).transfer(getPremium(kwhOffered));

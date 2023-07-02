@@ -37,9 +37,9 @@
 						"type": "address"
 					},
 					{
-						"internalType": "uint32",
+						"internalType": "uint256",
 						"name": "kwhAmount",
-						"type": "uint32"
+						"type": "uint256"
 					}
 				],
 				"name": "changeProvidedEnergy",
@@ -133,7 +133,7 @@
 		"userdoc": {
 			"kind": "user",
 			"methods": {
-				"changeProvidedEnergy(address,uint32)": {
+				"changeProvidedEnergy(address,uint256)": {
 					"notice": "Add the provided energy for provider and, if applicable, add them to the pool."
 				},
 				"distributePremium()": {
@@ -201,19 +201,19 @@
 			]
 		},
 		"smart-contracts/contracts/energyContracts/ElectricityAuction.sol": {
-			"keccak256": "0x0121fa84c2b47d9e53f624ab2cdfdbff59eb9265a0b40f0e2ea2b6d723d8cc69",
+			"keccak256": "0x8cdf17277745958ee8ef8a387920fc486d4303764a94107e5ca48127543ffe51",
 			"license": "UNLICENSED",
 			"urls": [
-				"bzz-raw://9dde7bb26a464540fc99ed113da965aae1c86934eabdcb36a5edc37d97d3faba",
-				"dweb:/ipfs/QmZiRSpM8eBHm7egxMQ3xtfPmWieHifHHL3n3rcvPCPGE4"
+				"bzz-raw://850265d3463550d818a251da1109e1cd46dcbd845280befd854f4fab9d2d75cf",
+				"dweb:/ipfs/QmUMkdnSjcDd515LYAyUBzkMqRX3yUV61M29KpfjJX9rhU"
 			]
 		},
 		"smart-contracts/contracts/energyContracts/ElectricityHub.sol": {
-			"keccak256": "0x14b517765175321b405f647e3ef2a24e4c3534497145fbb14ee026ecf1073c31",
+			"keccak256": "0x49119255a03301117e84098fa7cdebcf7797dc47accbd63d026fea7466d144b0",
 			"license": "UNLICENSED",
 			"urls": [
-				"bzz-raw://22bbf8105a13207a5b22a03c4c731f2ea86a45b2e82a50963cb71bc6b5f0c9e2",
-				"dweb:/ipfs/QmYmfYke77yYUmJHHDNGQ5Nh8A3F5zTrHFsFEQ3pffbWB2"
+				"bzz-raw://50754ff5637871edb7e4aaac16e793867419e6527cfa64abbd9f18adbeb0dc43",
+				"dweb:/ipfs/QmWf1ScqT4fhUEfHpEvoW6BvhoNYwD4HAnbLdVt45BVdwE"
 			]
 		},
 		"smart-contracts/contracts/energyContracts/IElectricityOracle.sol": {

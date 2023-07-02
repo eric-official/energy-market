@@ -14,8 +14,8 @@ contract ElectricityHub {
 
     // For renewable distribution
     address[] private renewableProviders;
-    mapping(address => uint32) private provisionedElectricity;
-    uint32 private totalkwH;
+    mapping(address => uint256) private provisionedElectricity;
+    uint256 private totalkwH;
     
     event AuctionStarted(uint256 kwhAmount, address indexed newContract);
 
@@ -64,7 +64,7 @@ contract ElectricityHub {
     /**
     * Add the provided energy for provider and, if applicable, add them to the pool.
     */
-    function changeProvidedEnergy(address provider, uint32 kwhAmount) external {
+    function changeProvidedEnergy(address provider, uint256 kwhAmount) external {
         bool invokedByAuction = false;
         for (uint32 i; i < currentAuctions.length && !invokedByAuction; i++) {
             invokedByAuction = invokedByAuction || msg.sender == address(currentAuctions[i].auction);            
@@ -86,8 +86,8 @@ contract ElectricityHub {
 
         for (uint256 i = 0; i < renewableProviders.length; i++) {
             address provider = renewableProviders[i];
-            uint32 kwhProvided = provisionedElectricity[provider];
-            uint32 provisionedFactor = kwhProvided / totalkwH;
+            uint256 kwhProvided = provisionedElectricity[provider];
+            uint256 provisionedFactor = kwhProvided / totalkwH;
 
             // Transfer part of the overall premium 
             payable(provider).transfer(balance * provisionedFactor);
