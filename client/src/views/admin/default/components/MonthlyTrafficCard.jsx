@@ -98,14 +98,14 @@ const MonthlyTrafficCard = ({connectedAccount}) => {
         <Card extra="!p-[20px] text-center">
             <div>
                 <h4 className="text-lg font-bold text-navy-700 dark:text-white">
-                    Your Energy Capacity
+                    Your Energy Usage
                 </h4>
             </div>
             <div
                 className="flex h-full w-full flex-row justify-between sm:flex-wrap lg:flex-nowrap 2xl:overflow-hidden">
                 <div className="h-full w-full">
                     {!connectedAccount ? (
-                        <p className="mt-[20px] text-3xl font-bold text-navy-700 dark:text-white">
+                        <p className="mt-10 font-dm text-sm font-medium text-gray-600">
                             Your traffic will be shown after connecting the wallet!
                         </p>
                     ) : (
