@@ -35,7 +35,7 @@ contract ElectricityAuction {
         isRenewable = _isRenewable;
         electricityHub = ElectricityHub(msg.sender);
         tradingContext = Caller(callerAddress);
-       // contextData = tradingContext.getElectricityData();
+        contextData = tradingContext.getElectricityData();
     }
 
     modifier onlyOwner {
