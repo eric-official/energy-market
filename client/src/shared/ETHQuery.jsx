@@ -1,7 +1,7 @@
-import {getContract} from "./BasicQuery";
+import { getContract, getLogs } from "./BasicQuery";
 import { ethAddress, ethABI } from '../utils/constants'
 import { ethers } from 'ethers'
-import React, { useEffect, useState  } from "react";
+import React, { useEffect, useState } from "react";
 
 
 
@@ -34,6 +34,7 @@ async function getAccountEnergyBalance(connectedAccount) {
     const contract = await getContract(ethAddress, ethABI)
     try {
         const energy_balance = await contract.getAccountEnergyBalance(connectedAccount);
+        console.log(energy_balance);
         return Promise.resolve(energy_balance);
     } catch (error) {
         console.error(error);
@@ -46,9 +47,9 @@ async function getMonthlySpend(connectedAccount) {
         const txs_from_account = contract.filters.Consume(connectedAccount, null);
         const query_results = await contract.queryFilter(txs_from_account);
         let monthly_spend = 0;
-        for(let i = 0; i < query_results.length; i++) {
+        for (let i = 0; i < query_results.length; i++) {
             let time_diff = Number(Math.floor(Date.now() / 1000)) - Number(query_results[i].args[4])
-            if(time_diff <= 30 * 24 * 60 * 60) {
+            if (time_diff <= 30 * 24 * 60 * 60) {
                 monthly_spend += Number(query_results[i].args[2]);
             }
         }
@@ -62,7 +63,7 @@ async function getMonthlySpend(connectedAccount) {
 async function provide(connectedAccount) {
     const contract = await getContract(ethAddress, ethABI)
     try {
-        await contract.provide(connectedAccount, 100, true);
+        await contract.provide(1, true);
     } catch (error) {
         console.error(error);
     }
@@ -77,6 +78,42 @@ async function use(connectedAccount) {
         console.error(error);
     }
 }
+async function getAuctionData() {
+    // Your logic to fetch the data
+    const contract = await getContract(ethAddress, ethABI)
+    const log_filter = contract.filters.AuctionStarted();
+    const consume_query = await contract.queryFilter(log_filter);
+    const data = []
+    consume_query.forEach((log) => {
+        data.push({
+            "blockNumber": log.blockNumber,
+            "energy": String(log.args[0]),
+            "status": "Auction creation",
+            "address": log.args[1]
+        })
+    });
+    console.log(data)
+    return {
+        columns: [{
+            Header: "BLOCK NUMBER",
+            accessor: "blockNumber",
+        },
+        {
+            Header: "ENERGY",
+            accessor: "energy",
+        },
+        {
+            Header: "STATUS",
+            accessor: "status",
+        },
+        {
+            Header: "AUCTION ADDRESS",
+            accessor: "address",
+        },],
+        data: data
+    }
+
+};
 
 async function consume(connectedAccount) {
     const contract = await getContract(ethAddress, ethABI)
@@ -88,7 +125,7 @@ async function consume(connectedAccount) {
     }
 }
 
-async function getMonthlyTrafficData(connectedAccount){
+async function getMonthlyTrafficData(connectedAccount) {
     const contract = await getContract(ethAddress, ethABI)
     try {
         const consume_filter = contract.filters.Consume(connectedAccount, null);
@@ -97,7 +134,7 @@ async function getMonthlyTrafficData(connectedAccount){
         const use_query = await contract.queryFilter(use_filter);
 
         let all_queries = consume_query.concat(use_query);
-        all_queries.sort(function(a,b) {
+        all_queries.sort(function (a, b) {
             let time_index_a = 0;
             let time_index_b = 0;
             if (a.fragment.name === "Consume") {
@@ -149,7 +186,7 @@ async function getMonthlyTrafficData(connectedAccount){
 
         }
 
-        const queryResults = {"data": monthly_traffic_data, "labels": monthly_traffic_labels}
+        const queryResults = { "data": monthly_traffic_data, "labels": monthly_traffic_labels }
         return Promise.resolve(queryResults);
     } catch (error) {
         console.error(error);
@@ -166,4 +203,5 @@ export {
     getMonthlySpend,
     use,
     getMonthlyTrafficData,
+    getAuctionData
 }

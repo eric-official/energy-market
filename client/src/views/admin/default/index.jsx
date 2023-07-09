@@ -8,6 +8,14 @@ import ActionCard from "./components/ActionCard";
 import UseCard from "./components/UseCard";
 import EnergyBalanceCard from "./components/EnergyBalanceCard";
 import { CountdownCircleTimer } from 'react-countdown-circle-timer'
+import ColumnsTable from "./components/ColumnsTable";
+import {
+  columnsDataDevelopment,
+  columnsDataCheck,
+  columnsDataColumns,
+  columnsDataComplex,
+} from "./variables/columnsData";
+import tableDataColumns from "./variables/tableDataColumns.json";
 
 import ETHBalanceCard from "./components/ETHBalanceCard";
 import TotalSpent from "views/admin/default/components/TotalSpent";
@@ -16,8 +24,6 @@ import TimerCard from "views/admin/default/components/TimerCard";
 import { IoMdHome } from "react-icons/io";
 import { IoDocuments } from "react-icons/io5";
 import { MdBarChart, MdDashboard } from "react-icons/md";
-
-import { columnsDataCheck, columnsDataComplex } from "./variables/columnsData";
 
 import Widget from "components/widget/Widget";
 import CheckTable from "views/admin/default/components/CheckTable";
@@ -38,11 +44,10 @@ const Dashboard = () => {
     <div>
       {/* Card widget */}
 
-      <div className="mt-3 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3 3xl:grid-cols-5">
+      <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-4" style={{ gridTemplateColumns: '1fr 1fr 2fr 1fr' }}>
         <ETHBalanceCard connectedAccount={connectedAccount} />
-        <EnergyBalanceCard connectedAccount={connectedAccount} />
         <MonthlySpendCard connectedAccount={connectedAccount} />
-        <PoolAmountCard />
+        <PoolAmountCard connectedAccount={connectedAccount}/>
         <WalletCard />
 
       </div>
@@ -54,7 +59,11 @@ const Dashboard = () => {
           <RenewableMixCard />
           <TimerCard />
         </div>
-        <MonthlyTrafficCard connectedAccount={connectedAccount} />
+        <ColumnsTable
+          columnsData={columnsDataColumns}
+          tableData={tableDataColumns}
+        />
+        {/* <MonthlyTrafficCard connectedAccount={connectedAccount} /> */}
         <ActionCard connectedAccount={connectedAccount} />
       </div>
 
