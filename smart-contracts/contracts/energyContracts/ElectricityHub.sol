@@ -11,6 +11,8 @@ contract ElectricityHub {
 
     Auction[] private currentAuctions;
     uint256 public upgradeInterval = 1 minutes;
+    mapping(address => bool) isAuction;
+    mapping(address => uint256) public energyBalance;
 
     // For renewable distribution
     address[] private renewableProviders;
@@ -32,19 +34,24 @@ contract ElectricityHub {
         _;
     }
 
+    modifier onlyAuction {
+        require(isAuction[msg.sender], "Change provided energy is only invokable by an auction.");
+        _;
+    }
+
     /**
     * End mature auction and remove from current active auctions.
     */
-    function endMatureAuctions() external onlyOwner {
-        for (uint32 i; i < currentAuctions.length; i++) {
-            Auction memory auction = currentAuctions[i];
-            if (block.timestamp > auction.start + upgradeInterval) {
+    function endMatureAuctions() external onlyOwner {        
+        for (uint32 i = 0; i < currentAuctions.length; i++) {
+            Auction storage auction = currentAuctions[i];
+            if (block.timestamp > auction.start + upgradeInterval && address(auction.auction) != address(0)) {
                 auction.auction.endAuction();
                 delete currentAuctions[i];
             }
         }
-    }
 
+    }
     /**
     * Get all active auctions that can be participated in.
     */
@@ -59,20 +66,23 @@ contract ElectricityHub {
     */
     function provide(uint256 kwhAmount, bool isRenewable) external {
         ElectricityAuction newAuction = new ElectricityAuction(kwhAmount, msg.sender, isRenewable, callerAddress); 
+        isAuction[(address(newAuction))] = true;
         currentAuctions.push(Auction(block.timestamp, newAuction));
         emit AuctionStarted(kwhAmount, address(newAuction));
+    }
+    
+    function setEnergyBalance(address consumer, uint256 kwhAmount) external onlyAuction {
+        energyBalance[consumer] = energyBalance[consumer] + kwhAmount;
+    }
+
+    function getEnergyBalance(address consumer) external view returns(uint256) {
+        return energyBalance[consumer];
     }
 
     /**
     * Add the provided energy for provider and, if applicable, add them to the pool.
     */
-    function changeProvidedEnergy(address provider, uint256 kwhAmount) external {
-        bool invokedByAuction = false;
-        for (uint32 i; i < currentAuctions.length && !invokedByAuction; i++) {
-            invokedByAuction = invokedByAuction || msg.sender == address(currentAuctions[i].auction);            
-        }
-
-        require(invokedByAuction, "Change provided energy is only invokable by an auction.");
+    function changeProvidedEnergy(address provider, uint256 kwhAmount) external onlyAuction {
 
         totalkwH += kwhAmount;
         if (provisionedElectricity[provider] == 0) {

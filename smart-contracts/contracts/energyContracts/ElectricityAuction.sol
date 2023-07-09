@@ -35,7 +35,7 @@ contract ElectricityAuction {
         isRenewable = _isRenewable;
         electricityHub = ElectricityHub(msg.sender);
         tradingContext = Caller(callerAddress);
-        contextData = tradingContext.getElectricityData();
+       // contextData = tradingContext.getElectricityData();
     }
 
     modifier onlyOwner {
@@ -75,6 +75,7 @@ contract ElectricityAuction {
         uint256 localHighestBid = 0;  
         uint256 localSecondHighestBid = 0; 
         Bid memory currentBid;
+        address localWinner = address(0);
 
         // Find the second highest bid and the winner
         for (uint256 i = 0; i < participants.length; i++) {            
@@ -84,21 +85,23 @@ contract ElectricityAuction {
             
             // Find the winner
             if (bidderBid > localHighestBid) {
-                winner = bidderAddress;
+                localWinner = bidderAddress;
                 localSecondHighestBid = localHighestBid;  // Assign the old highest bid to second highest bid before updating the highest bid
                 localHighestBid = bidderBid;
-            }else if (bidderBid > localSecondHighestBid && bidderBid < localHighestBid) {
+            } else if (bidderBid > localSecondHighestBid && bidderBid < localHighestBid) {
                 // Update the second highest bid if the current bid is lower than the highest and higher than the current second highest
                 localSecondHighestBid = bidderBid;
             }
             secondHighestBid = localSecondHighestBid;  
-        }           
+        }     
+
+        winner = localWinner;      
         
         // Transfer funds back to non-winners
         for (uint256 i = 0; i < participants.length; i++) {  
             currentBid = participatedInAuction[participants[i]];
             address payable bidderAddress = currentBid.bidder;
-            if (bidderAddress != winner) {
+            if (bidderAddress != localWinner) {
                 bidderAddress.transfer(currentBid.bidPerKwh * kwhOffered);
             }
         }
@@ -117,15 +120,17 @@ contract ElectricityAuction {
         if (fundsDifference < 0) {
             uint256 refundAmount = uint256(-fundsDifference);
             payable(msg.sender).transfer(refundAmount);
-        } else {
-            if (isRenewable) {
-                auctioneer.transfer(overallPrice);
-                electricityHub.changeProvidedEnergy(auctioneer, kwhOffered);
-            } else {
-                auctioneer.transfer(secondHighestBid * kwhOffered);
-                payable(address(electricityHub)).transfer(getPremium(kwhOffered));
-            }
         }
+
+        if (isRenewable) {
+            auctioneer.transfer(overallPrice);
+            electricityHub.changeProvidedEnergy(auctioneer, kwhOffered);
+        } else {
+            auctioneer.transfer(secondHighestBid * kwhOffered);
+            payable(address(electricityHub)).transfer(getPremium(kwhOffered));
+        }
+        
+        electricityHub.setEnergyBalance(msg.sender, kwhOffered);
 
         auctionPayed = true;
         emit AuctionCollected();
