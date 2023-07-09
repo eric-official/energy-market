@@ -29,11 +29,12 @@ contract ElectricityAuction {
     event AuctionCollected();
     Caller.ElectricityData contextData;
 
-    constructor(uint256 _kwhOffered, address _auctioneer, bool _isRenewable) {
+    constructor(uint256 _kwhOffered, address _auctioneer, bool _isRenewable, address callerAddress) {
         kwhOffered = _kwhOffered;
         auctioneer = payable(_auctioneer);
         isRenewable = _isRenewable;
         electricityHub = ElectricityHub(msg.sender);
+        tradingContext = Caller(callerAddress);
         contextData = tradingContext.getElectricityData();
     }
 
@@ -48,7 +49,7 @@ contract ElectricityAuction {
     }
 
     modifier onlyEndedAuction {
-        require(!auctionActive, "Function can only be executed when auction is active.");
+        require(!auctionActive, "Function can only be executed when auction has ended.");
         _;
     }
 
@@ -69,9 +70,10 @@ contract ElectricityAuction {
     /**
     * End the auction and transfer funds to non-winners.
     */
-    function endAuction() external onlyOwner {
+    function endAuction() payable external onlyOwner {
         auctionActive = false;
-        uint256 highestBid = 0;   
+        uint256 localHighestBid = 0;  
+        uint256 localSecondHighestBid = 0; 
         Bid memory currentBid;
 
         // Find the second highest bid and the winner
@@ -81,15 +83,15 @@ contract ElectricityAuction {
             uint256 bidderBid = currentBid.bidPerKwh;
             
             // Find the winner
-            if (bidderBid > highestBid) {
+            if (bidderBid > localHighestBid) {
                 winner = bidderAddress;
-                highestBid = bidderBid;
+                localSecondHighestBid = localHighestBid;  // Assign the old highest bid to second highest bid before updating the highest bid
+                localHighestBid = bidderBid;
+            }else if (bidderBid > localSecondHighestBid && bidderBid < localHighestBid) {
+                // Update the second highest bid if the current bid is lower than the highest and higher than the current second highest
+                localSecondHighestBid = bidderBid;
             }
-
-            // Find the second highest bid
-            if (currentBid.bidPerKwh > secondHighestBid && currentBid.bidPerKwh < highestBid) {
-                secondHighestBid = currentBid.bidPerKwh;
-            }
+            secondHighestBid = localSecondHighestBid;  
         }           
         
         // Transfer funds back to non-winners

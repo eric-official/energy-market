@@ -16,13 +16,15 @@ contract ElectricityHub {
     address[] private renewableProviders;
     mapping(address => uint256) private provisionedElectricity;
     uint256 private totalkwH;
+    address callerAddress;
     
     event AuctionStarted(uint256 kwhAmount, address indexed newContract);
 
     address private owner;
 
-    constructor() {
+    constructor(address callerAddressInit) {
         owner = msg.sender;
+        callerAddress = callerAddressInit;
     }
 
     modifier onlyOwner {
@@ -36,7 +38,7 @@ contract ElectricityHub {
     function endMatureAuctions() external onlyOwner {
         for (uint32 i; i < currentAuctions.length; i++) {
             Auction memory auction = currentAuctions[i];
-            if (block.timestamp <= auction.start + upgradeInterval) {
+            if (block.timestamp > auction.start + upgradeInterval) {
                 auction.auction.endAuction();
                 delete currentAuctions[i];
             }
@@ -56,7 +58,7 @@ contract ElectricityHub {
     * @param isRenewable Flag that indicates if the provided electricity is from a renewable source.
     */
     function provide(uint256 kwhAmount, bool isRenewable) external {
-        ElectricityAuction newAuction = new ElectricityAuction(kwhAmount, msg.sender, isRenewable); 
+        ElectricityAuction newAuction = new ElectricityAuction(kwhAmount, msg.sender, isRenewable, callerAddress); 
         currentAuctions.push(Auction(block.timestamp, newAuction));
         emit AuctionStarted(kwhAmount, address(newAuction));
     }
@@ -70,7 +72,7 @@ contract ElectricityHub {
             invokedByAuction = invokedByAuction || msg.sender == address(currentAuctions[i].auction);            
         }
 
-        require(invokedByAuction, "Change pprovided energy is only invokable by an auction.");
+        require(invokedByAuction, "Change provided energy is only invokable by an auction.");
 
         totalkwH += kwhAmount;
         if (provisionedElectricity[provider] == 0) {
