@@ -122,7 +122,7 @@ contract ElectricityAuction {
             payable(address(electricityHub)).transfer(getPremium());
         }
         
-        electricityHub.setEnergyBalance(msg.sender, kwhOffered);
+        //electricityHub.setEnergyBalance(msg.sender, kwhOffered);
 
         auctionPayed = true;
 

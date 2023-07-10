@@ -21,6 +21,7 @@ contract ElectricityHub {
     address callerAddress;
     
     event AuctionStarted(uint256 kwhAmount, address indexed newContract);
+    event Auctionmatured(uint256 kwhAmount, address indexed newContract);
 
     address private owner;
 

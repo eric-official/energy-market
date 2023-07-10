@@ -43,7 +43,8 @@ contract Caller is Ownable {
             "Oracle not initialized."
         );
 
-        if (block.timestamp <= latestDataRequestTimestamp + 10 minutes) {
+        uint256 idToUse = latestId;
+        if (block.timestamp <= latestDataRequestTimestamp + 10000 minutes) {
             uint256 id = electricityOracle.requestElectricityData();
             requests[id] = true;
 
@@ -52,7 +53,7 @@ contract Caller is Ownable {
             emit ElectricityDataRequested(id);
         }
 
-        return results[latestId];
+        return results[idToUse];
     }
 
     function fulfillElectricityDataRequest(
