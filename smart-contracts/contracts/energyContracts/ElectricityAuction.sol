@@ -112,25 +112,20 @@ contract ElectricityAuction {
 
     function collect() external payable onlyEndedAuction {
         require(msg.sender == winner, "Only the winner can collect the auction price.");     
-
+        
+        electricityHub.setEnergyBalance(msg.sender, kwhOffered);
+        auctionPayed = true;
         if (isRenewable) {
             uint256 overallPrice = getPriceForThisAuction();
             electricityHub.changeProvidedEnergy(auctioneer, kwhOffered);
             auctioneer.transfer(overallPrice);
         } else {
             auctioneer.transfer(secondHighestBid * kwhOffered);
-            payable(address(electricityHub)).transfer(getPremium());
-        }
-        
-        //electricityHub.setEnergyBalance(msg.sender, kwhOffered);
+            // remainingBalance = address(this).balance;    
+            // (bool success, ) = payable(address(electricityHub)).call{value: remainingBalance}("");
+            // require(success, "Transfer failed");    
+        }        
 
-        auctionPayed = true;
-
-        uint256 remainingBalance = address(this).balance;
-        if (remainingBalance > 0) {
-            payable(msg.sender).transfer(remainingBalance);
-        }
-       
         emit AuctionCollected();
     }
 

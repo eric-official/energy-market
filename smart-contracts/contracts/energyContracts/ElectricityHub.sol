@@ -72,7 +72,7 @@ contract ElectricityHub {
         emit AuctionStarted(kwhAmount, address(newAuction));
     }
     
-    function setEnergyBalance(address consumer, uint256 kwhAmount) external onlyAuction {
+    function setEnergyBalance(address consumer, uint256 kwhAmount) external payable onlyAuction {
         energyBalance[consumer] = energyBalance[consumer] + kwhAmount;
     }
 
