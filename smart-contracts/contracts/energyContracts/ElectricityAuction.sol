@@ -121,9 +121,8 @@ contract ElectricityAuction {
             auctioneer.transfer(overallPrice);
         } else {
             auctioneer.transfer(secondHighestBid * kwhOffered);
-            // remainingBalance = address(this).balance;    
-            // (bool success, ) = payable(address(electricityHub)).call{value: remainingBalance}("");
-            // require(success, "Transfer failed");    
+            uint256 remainingBalance = address(this).balance;    
+            payable(address(electricityHub)).transfer(remainingBalance);               
         }        
 
         emit AuctionCollected();
