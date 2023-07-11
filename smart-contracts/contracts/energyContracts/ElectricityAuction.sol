@@ -27,6 +27,7 @@ contract ElectricityAuction {
 
     event AuctionEnded(uint256 price, address winner);
     event AuctionCollected();
+    event BidPlaced(address bidder, uint256 bidPerKwh);
     Caller.ElectricityData contextData;
 
     constructor(uint256 _kwhOffered, address _auctioneer, bool _isRenewable, address callerAddress) {
@@ -65,6 +66,7 @@ contract ElectricityAuction {
         require(msg.value >= totalPrice);
         participatedInAuction[msg.sender] = Bid(payable(msg.sender), msg.value / kwhOffered);
         participants.push(msg.sender);
+        emit BidPlaced(msg.sender, msg.value / kwhOffered);
     }
 
     /**

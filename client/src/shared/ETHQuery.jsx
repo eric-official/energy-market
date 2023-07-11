@@ -1,5 +1,5 @@
 import { getContract, getLogs } from "./BasicQuery";
-import { ethAddress, ethABI } from '../utils/constants'
+import { ethAddress, ethABI, auctionABI } from '../utils/constants'
 import { ethers } from 'ethers'
 import React, { useEffect, useState } from "react";
 
@@ -33,8 +33,7 @@ async function getQueueSum() {
 async function getAccountEnergyBalance(connectedAccount) {
     const contract = await getContract(ethAddress, ethABI)
     try {
-        const energy_balance = await contract.getAccountEnergyBalance(connectedAccount);
-        console.log(energy_balance);
+        const energy_balance = await contract.getEnergyBalance(connectedAccount);
         return Promise.resolve(energy_balance);
     } catch (error) {
         console.error(error);
@@ -60,10 +59,12 @@ async function getMonthlySpend(connectedAccount) {
     }
 }
 
-async function provide(connectedAccount) {
+async function provide(energy_amount,connectedAccount) {
     const contract = await getContract(ethAddress, ethABI)
+    const energyAmountInt = parseInt(energy_amount);
+    console.log(energyAmountInt)
     try {
-        await contract.provide(1, true);
+        await contract.provide(energyAmountInt, true);
     } catch (error) {
         console.error(error);
     }
@@ -71,11 +72,37 @@ async function provide(connectedAccount) {
 
 async function use(connectedAccount) {
     const contract = await getContract(ethAddress, ethABI)
-    try {
-        //const kwhAmount = Math.floor(Math.random() * 5);
-        await contract.use(connectedAccount, 1)
-    } catch (error) {
-        console.error(error);
+    const energyBalance = await contract.getEnergyBalance(connectedAccount)
+    if (energyBalance < 5) {
+        console.log("Not enough energy")
+        const openAuctions = await contract.getCurrentAuctions()
+        const processData = async () => {
+            for (let openAuction of openAuctions) {
+                if (openAuction[1] != "0x0000000000000000000000000000000000000000") {
+                    console.log("auction", openAuction[0]);
+                    const auctionContract = await getContract(openAuction[1], auctionABI)
+                    let etherToSend = 0.005;  // replace this with the actual amount
+                    let weiToSend = ethers.parseEther(etherToSend.toString());
+
+                    // Call the bid() function and send Ether
+                    let transaction = await auctionContract.bid({ value: weiToSend });
+                    auctionContract.on('AuctionEnded', async (secondHighestBid, winner, event) => {
+                        console.log(`Auction ended with winner: ${winner} and second highest bid: ${secondHighestBid}`);
+
+                        if (winner.toLowerCase() === connectedAccount.toLowerCase()) {
+                            console.log("This account has won the auction");
+
+                            // Call the collect function
+                            const collectTransaction = await auctionContract.collect();
+                            console.log("Collect transaction:", collectTransaction);
+                        }
+                    });
+                    break;
+                }
+            }
+        }
+        await processData();
+
     }
 }
 async function getAuctionData() {
@@ -83,17 +110,27 @@ async function getAuctionData() {
     const contract = await getContract(ethAddress, ethABI)
     const log_filter = contract.filters.AuctionStarted();
     const consume_query = await contract.queryFilter(log_filter);
+    const log_filter1 = contract.filters.MatureAuctionEnded();
+    const consume_query1 = await contract.queryFilter(log_filter1);
     const data = []
     consume_query.forEach((log) => {
         data.push({
             "blockNumber": log.blockNumber,
             "energy": String(log.args[0]),
-            "status": "Auction creation",
+            "status": "Auction Started",
             "address": log.args[1]
         })
     });
-    console.log(data)
-    return {
+    consume_query1.forEach((log) => {
+        data.push({
+            "blockNumber": log.blockNumber,
+            "energy": "-",
+            "status": "Auction Ended",
+            "address": log.args[0]
+        })
+    });
+
+    const returnData = {
         columns: [{
             Header: "BLOCK NUMBER",
             accessor: "blockNumber",
@@ -112,6 +149,63 @@ async function getAuctionData() {
         },],
         data: data
     }
+    return returnData
+
+};
+
+async function getBidData() {
+    // Your logic to fetch the data
+    const contract = await getContract(ethAddress, ethABI)
+    const log_filter = contract.filters.AuctionStarted();
+    const consume_query = await contract.queryFilter(log_filter);
+    const data = []
+    const processData = async () => {
+        for (let log of consume_query) {
+            const auctionAddress = log.args[1];
+            const auctionContract = await getContract(auctionAddress, auctionABI);
+            const auction_filter = auctionContract.filters.AuctionEnded();
+            const auction_query = await auctionContract.queryFilter(auction_filter);
+            for (let auctionLog of auction_query) {
+                let status = ""
+                if (auctionLog.args[1] != "0x0000000000000000000000000000000000000000") {
+                    status = "Auction Ended. Winner:" + auctionLog.args[1] + " Price:" + auctionLog.args[0]
+                }
+                else {
+                    status = "Auction Ended. No Winner"
+                }
+                data.push({
+                    "auction": auctionAddress,
+                    "status": status
+                })
+            };
+            const bid_filter = auctionContract.filters.BidPlaced();
+            const bid_query = await auctionContract.queryFilter(bid_filter);
+            for (let bidLog of bid_query) {
+                console.log(bidLog)
+                let status = ""
+                status = "Bid Placed. Bidder: " + bidLog.args[0] + " Price:" + ethers.formatEther(bidLog.args[1])
+
+                data.push({
+                    "auction": auctionAddress,
+                    "status": status
+                })
+            };
+
+        };
+    }
+    await processData();
+    const returnData = {
+        columns: [{
+            Header: "AUCTION",
+            accessor: "auction",
+        },
+        {
+            Header: "STATUS",
+            accessor: "status",
+        }],
+        data: data
+    }
+    return returnData
 
 };
 
@@ -120,6 +214,15 @@ async function consume(connectedAccount) {
     try {
         const overrides = { value: 1000000000000 };
         await contract.consume(connectedAccount, 1, overrides)
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+async function endMatureAuction() {
+    const contract = await getContract(ethAddress, ethABI)
+    try {
+        await contract.endMatureAuctions()
     } catch (error) {
         console.error(error);
     }
@@ -192,7 +295,99 @@ async function getMonthlyTrafficData(connectedAccount) {
         console.error(error);
     }
 }
+async function subscribeAuctionData(callback) {
+    const contract = await getContract(ethAddress, ethABI)
+    contract.on("*", async () => {
+        const log_filter = contract.filters.AuctionStarted();
+        const consume_query = await contract.queryFilter(log_filter);
+        const log_filter1 = contract.filters.MatureAuctionEnded();
+        const consume_query1 = await contract.queryFilter(log_filter1);
+        const data = []
+        consume_query.forEach((log) => {
+            data.push({
+                "blockNumber": log.blockNumber,
+                "energy": String(log.args[0]),
+                "status": "Auction creation",
+                "address": log.args[1]
+            })
+        });
+        consume_query1.forEach((log) => {
+            data.push({
+                "blockNumber": log.blockNumber,
+                "energy": "-",
+                "status": "Auction Ended",
+                "address": log.args[0]
+            })
+        });
+        // Here, we call the callback with the new data instead of returning it
+        callback({
+            columns: [{
+                Header: "BLOCK NUMBER",
+                accessor: "blockNumber",
+            },
+            {
+                Header: "ENERGY",
+                accessor: "energy",
+            },
+            {
+                Header: "STATUS",
+                accessor: "status",
+            },
+            {
+                Header: "AUCTION ADDRESS",
+                accessor: "address",
+            },],
+            data: data
+        })
+    });
+}
 
+async function subscribeBidData(callback) {
+    const contract = await getContract(ethAddress, ethABI)
+    contract.on("*", async () => {
+        const log_filter = contract.filters.AuctionStarted();
+        const consume_query = await contract.queryFilter(log_filter);
+        const data = []
+        const processData = async () => {
+
+            for (let log of consume_query) {
+                const auctionAddress = log.args[1];
+                const auctionContract = await getContract(auctionAddress, auctionABI);
+                const auction_filter = auctionContract.filters.AuctionEnded();
+                const auction_query = await auctionContract.queryFilter(auction_filter);
+                for (let auctionLog of auction_query) {
+                    console.log(auctionLog)
+                    let status = ""
+                    if (auctionLog.args[1] != "0x0000000000000000000000000000000000000000") {
+                        status = "Auction Ended. Winner: " + auctionLog.args[1] + " Price: " + auctionLog.args[0]
+                    }
+                    else {
+                        status = "Auction Ended. No Winner"
+                    }
+                    data.push({
+                        "auction": auctionAddress,
+                        "status": status
+                    })
+                };
+
+            };
+        }
+        await processData();
+        const returnData = {
+            columns: [{
+                Header: "AUCTION",
+                accessor: "auction",
+            },
+            {
+                Header: "STATUS",
+                accessor: "status",
+            }],
+            data: data
+        }
+        // Here, we call the callback with the new data instead of returning it
+        callback(returnData)
+    });
+}
 
 export {
     provide,
@@ -203,5 +398,9 @@ export {
     getMonthlySpend,
     use,
     getMonthlyTrafficData,
-    getAuctionData
+    getAuctionData,
+    subscribeAuctionData,
+    endMatureAuction,
+    getBidData,
+    subscribeBidData
 }

@@ -8,7 +8,9 @@ import ActionCard from "./components/ActionCard";
 import UseCard from "./components/UseCard";
 import EnergyBalanceCard from "./components/EnergyBalanceCard";
 import { CountdownCircleTimer } from 'react-countdown-circle-timer'
-import ColumnsTable from "./components/ColumnsTable";
+import AuctionTable from "./components/AuctionTable";
+import BidTable from "./components/BidTable";
+
 import {
   columnsDataDevelopment,
   columnsDataCheck,
@@ -46,29 +48,33 @@ const Dashboard = () => {
 
       <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-4" style={{ gridTemplateColumns: '1fr 1fr 2fr 1fr' }}>
         <ETHBalanceCard connectedAccount={connectedAccount} />
-        <MonthlySpendCard connectedAccount={connectedAccount} />
-        <PoolAmountCard connectedAccount={connectedAccount}/>
+        <EnergyBalanceCard connectedAccount={connectedAccount} />
+        <PoolAmountCard connectedAccount={connectedAccount} />
         <WalletCard />
 
       </div>
 
       {/* Charts */}
 
-      <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-3" style={{ gridTemplateColumns: '1fr 2fr 1fr' }}>
-        <div className="mt-3 grid grid-cols-1 gap-5 md:grid-cols-1">
-          <RenewableMixCard />
-          <TimerCard />
-        </div>
-        <ColumnsTable
-          columnsData={columnsDataColumns}
-          tableData={tableDataColumns}
-        />
+      <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-3">
+        <RenewableMixCard />
+        <TimerCard />
+
         {/* <MonthlyTrafficCard connectedAccount={connectedAccount} /> */}
         <ActionCard connectedAccount={connectedAccount} />
       </div>
 
+      <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
+        <AuctionTable
+          columnsData={columnsDataColumns}
+          tableData={tableDataColumns}
+        />
+        <BidTable
+          columnsData={columnsDataColumns}
+          tableData={tableDataColumns}
+        />
 
-
+      </div>
 
       {/* <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-2">
 

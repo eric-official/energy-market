@@ -27,7 +27,7 @@ const EnergyBalanceCard = ({ connectedAccount }) => {
 
             <div className="h-50 ml-4 flex w-auto flex-col justify-center">
                 <p className="font-dm text-sm font-medium text-gray-600">Balance</p>
-                <h4 className="text-xl font-bold text-navy-700 dark:text-white">
+                <h4 className="text-md font-bold text-navy-700 dark:text-white">
                     {balance + ""} Kwh
                 </h4>
             </div>

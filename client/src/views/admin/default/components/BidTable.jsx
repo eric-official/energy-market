@@ -7,20 +7,18 @@ import {
   useSortBy,
   useTable,
 } from "react-table";
-import {getAuctionData} from "../../../../shared/ETHQuery";
+import { getBidData, subscribeBidData } from "../../../../shared/ETHQuery";
 
 
 
-const ColumnsTable = () => {
+const AuctionTable = () => {
   const [columnsData, setColumnsData] = useState([]);
   const [tableData, setTableData] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { columns, data } = await getAuctionData();
-        console.log(data)
-        console.log(columns)
+        const { columns, data } = await getBidData();
         setColumnsData(columns);
         setTableData(data);
       } catch (error) {
@@ -29,6 +27,11 @@ const ColumnsTable = () => {
     };
 
     fetchData();
+    subscribeBidData((newData) => {
+      setColumnsData(newData.columns);
+      setTableData(newData.data);
+    });
+
   }, []);
 
   const columns = useMemo(() => columnsData, [columnsData]);
@@ -38,6 +41,8 @@ const ColumnsTable = () => {
     {
       columns,
       data,
+      initialState: { sortBy: [{ id: 'blockNumber', desc: true }] },  // Add this line
+
     },
     useGlobalFilter,
     useSortBy,
@@ -58,7 +63,7 @@ const ColumnsTable = () => {
     <Card extra={"w-full pb-10 p-4 h-full"}>
       <header className="relative flex items-center justify-between">
         <div className="text-xl font-bold text-navy-700 dark:text-white">
-          Auction
+          Bids and Results
         </div>
         <CardMenu />
       </header>
@@ -72,7 +77,7 @@ const ColumnsTable = () => {
                   <th
                     {...column.getHeaderProps(column.getSortByToggleProps())}
                     key={index}
-                    className="border-b border-gray-200 pr-14 pb-[10px] text-start dark:!border-navy-700"
+                    className="border-b border-gray-200 pr-8 pb-[10px] text-start dark:!border-navy-700"
                   >
                     <div className="flex w-full justify-between pr-10 text-xs tracking-wide text-gray-600">
                       {column.render("Header")}
@@ -89,27 +94,17 @@ const ColumnsTable = () => {
                 <tr {...row.getRowProps()} key={index}>
                   {row.cells.map((cell, index) => {
                     let data;
-                    if (cell.column.Header === "BLOCK NUMBER") {
+                    if (cell.column.Header === "AUCTION") {
+                      const address = cell.value;
+                      const shortAddress = address.slice(0, 6) + "..." + address.slice(-4);
                       data = (
                         <p className="text-sm font-bold text-navy-700 dark:text-white">
-                          {cell.value}
-                        </p>
-                      );
-                    } else if (cell.column.Header === "ENERGY") {
-                      data = (
-                        <p className="text-sm font-bold text-navy-700 dark:text-white">
-                          {cell.value} kwh
+                          {shortAddress}
                         </p>
                       );
                     } else if (cell.column.Header === "STATUS") {
                       data = (
-                        <p className="text-sm font-bold text-navy-700 dark:text-white">
-                          {cell.value}
-                        </p>
-                      );
-                    } else if (cell.column.Header === "AUCTION ADDRESS") {
-                      data = (
-                        <p className="text-sm font-bold text-navy-700 dark:text-white">
+                        <p className="text-sm  text-navy-700 dark:text-white">
                           {cell.value}
                         </p>
                       );
@@ -134,4 +129,4 @@ const ColumnsTable = () => {
   );
 };
 
-export default ColumnsTable;
+export default AuctionTable;

@@ -5,6 +5,7 @@ import { useGlobalState } from "../../../../shared/dataStore"
 import { BiSolidWallet } from "react-icons/bi";
 import { MdCheckCircle, MdCancel, MdOutlineError } from "react-icons/md";
 import { CountdownCircleTimer } from 'react-countdown-circle-timer'
+import { endMatureAuction } from "../../../../shared/ETHQuery";
 
 const { ethereum } = window
 
@@ -25,7 +26,7 @@ const Timer = () => {
             <div className="mb-auto flex h-[220px] w-full items-center justify-center">
                 <CountdownCircleTimer
                     isPlaying={true}
-                    duration={60 * 15}
+                    duration={60 * 2}
                     colors={['#004777', '#F7B801', '#A30000', '#A30000']}
                     colorsTime={[7, 5, 2, 0]}
                     children={(remainingTime) => {
@@ -35,6 +36,7 @@ const Timer = () => {
                     }}
                     onComplete={() => {
                         // do your stuff here
+                        endMatureAuction()
                         return { shouldRepeat: true }
                     }}
                 >

@@ -2,7 +2,7 @@
 pragma solidity >=0.7.0 <0.9.0;
 import "./ElectricityAuction.sol";
 
-// Facilitates trading 
+// Facilitates trading
 contract ElectricityHub {
     struct Auction {
         uint256 start;
@@ -19,9 +19,9 @@ contract ElectricityHub {
     mapping(address => uint256) private provisionedElectricity;
     uint256 private totalkwH;
     address callerAddress;
-    
-    event AuctionStarted(uint256 kwhAmount, address indexed newContract);
 
+    event AuctionStarted(uint256 kwhAmount, address indexed newContract);
+    event MatureAuctionEnded(address indexed auctionContract);
     address private owner;
 
     constructor(address callerAddressInit) {
@@ -29,61 +29,83 @@ contract ElectricityHub {
         callerAddress = callerAddressInit;
     }
 
-    modifier onlyOwner {
-        require(msg.sender == owner, "Function can only be invoked by the owner,");
+    modifier onlyOwner() {
+        require(
+            msg.sender == owner,
+            "Function can only be invoked by the owner,"
+        );
         _;
     }
 
-    modifier onlyAuction {
-        require(isAuction[msg.sender], "Change provided energy is only invokable by an auction.");
+    modifier onlyAuction() {
+        require(
+            isAuction[msg.sender],
+            "Change provided energy is only invokable by an auction."
+        );
         _;
     }
 
     /**
-    * End mature auction and remove from current active auctions.
-    */
-    function endMatureAuctions() external onlyOwner {        
+     * End mature auction and remove from current active auctions.
+     */
+    function endMatureAuctions() external onlyOwner {
         for (uint32 i = 0; i < currentAuctions.length; i++) {
             Auction storage auction = currentAuctions[i];
-            if (block.timestamp > auction.start + upgradeInterval && address(auction.auction) != address(0)) {
+            if (
+                block.timestamp > auction.start + upgradeInterval &&
+                address(auction.auction) != address(0)
+            ) {
                 auction.auction.endAuction();
+                emit MatureAuctionEnded(address(auction.auction));
                 delete currentAuctions[i];
             }
         }
-
     }
+
     /**
-    * Get all active auctions that can be participated in.
-    */
-    function getCurrentAuctions() external view returns(Auction[] memory) {        
+     * Get all active auctions that can be participated in.
+     */
+    function getCurrentAuctions() external view returns (Auction[] memory) {
         return currentAuctions;
     }
 
     /**
-    * Provide energy to the market and start a new auction.
-    * @param kwhAmount The amount that will be provisioned to the grid.
-    * @param isRenewable Flag that indicates if the provided electricity is from a renewable source.
-    */
+     * Provide energy to the market and start a new auction.
+     * @param kwhAmount The amount that will be provisioned to the grid.
+     * @param isRenewable Flag that indicates if the provided electricity is from a renewable source.
+     */
     function provide(uint256 kwhAmount, bool isRenewable) external {
-        ElectricityAuction newAuction = new ElectricityAuction(kwhAmount, msg.sender, isRenewable, callerAddress); 
+        ElectricityAuction newAuction = new ElectricityAuction(
+            kwhAmount,
+            msg.sender,
+            isRenewable,
+            callerAddress
+        );
         isAuction[(address(newAuction))] = true;
         currentAuctions.push(Auction(block.timestamp, newAuction));
         emit AuctionStarted(kwhAmount, address(newAuction));
     }
-    
-    function setEnergyBalance(address consumer, uint256 kwhAmount) external onlyAuction {
+
+    function setEnergyBalance(
+        address consumer,
+        uint256 kwhAmount
+    ) external onlyAuction {
         energyBalance[consumer] = energyBalance[consumer] + kwhAmount;
     }
 
-    function getEnergyBalance(address consumer) external view returns(uint256) {
+    function getEnergyBalance(
+        address consumer
+    ) external view returns (uint256) {
         return energyBalance[consumer];
     }
 
     /**
-    * Add the provided energy for provider and, if applicable, add them to the pool.
-    */
-    function changeProvidedEnergy(address provider, uint256 kwhAmount) external onlyAuction {
-
+     * Add the provided energy for provider and, if applicable, add them to the pool.
+     */
+    function changeProvidedEnergy(
+        address provider,
+        uint256 kwhAmount
+    ) external onlyAuction {
         totalkwH += kwhAmount;
         if (provisionedElectricity[provider] == 0) {
             renewableProviders.push(provider);
@@ -92,10 +114,9 @@ contract ElectricityHub {
     }
 
     /**
-    * Distributes the stored premium amount the providers.    
-    */
+     * Distributes the stored premium amount the providers.
+     */
     function distributePremium() external payable onlyOwner {
-
         uint256 balance = address(this).balance;
 
         for (uint256 i = 0; i < renewableProviders.length; i++) {
@@ -103,7 +124,7 @@ contract ElectricityHub {
             uint256 kwhProvided = provisionedElectricity[provider];
             uint256 provisionedFactor = kwhProvided / totalkwH;
 
-            // Transfer part of the overall premium 
+            // Transfer part of the overall premium
             payable(provider).transfer(balance * provisionedFactor);
 
             // Reset provided value
