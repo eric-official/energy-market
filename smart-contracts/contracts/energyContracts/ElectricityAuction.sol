@@ -33,7 +33,7 @@ contract ElectricityAuction {
         kwhOffered = _kwhOffered;
         auctioneer = payable(_auctioneer);
         isRenewable = _isRenewable;
-        electricityHub = ElectricityHub(msg.sender);
+        electricityHub = ElectricityHub(payable(msg.sender));
         tradingContext = Caller(callerAddress);
         contextData = tradingContext.getElectricityData();
     }
@@ -119,10 +119,14 @@ contract ElectricityAuction {
             uint256 overallPrice = getPriceForThisAuction();
             electricityHub.changeProvidedEnergy(auctioneer, kwhOffered);
             auctioneer.transfer(overallPrice);
+            uint256 remainingBalance = address(this).balance;    
+            bool success = payable(winner).send(remainingBalance);
+            require(success, "Transfer failed");   
         } else {
             auctioneer.transfer(secondHighestBid * kwhOffered);
             uint256 remainingBalance = address(this).balance;    
-            payable(address(electricityHub)).transfer(remainingBalance);               
+            bool success = payable(address(electricityHub)).send(remainingBalance);
+            require(success, "Transfer failed");      
         }        
 
         emit AuctionCollected();

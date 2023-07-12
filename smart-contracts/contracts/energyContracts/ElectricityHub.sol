@@ -22,6 +22,7 @@ contract ElectricityHub {
     
     event AuctionStarted(uint256 kwhAmount, address indexed newContract);
     event Auctionmatured(uint256 kwhAmount, address indexed newContract);
+    event ElectricityUsed(uint256 usedKwh, address indexed consumer);
 
     address private owner;
 
@@ -76,6 +77,13 @@ contract ElectricityHub {
         energyBalance[consumer] = energyBalance[consumer] + kwhAmount;
     }
 
+    function decreaseEnergyBalance(uint256 kwhAmount) external {
+        address consumer = msg.sender;
+        require(energyBalance[consumer] >= kwhAmount, "The energy balance must be greater or equals the consumed amount.");
+        energyBalance[consumer] = energyBalance[consumer] - kwhAmount;
+        emit ElectricityUsed(kwhAmount, consumer);
+    }
+
     function getEnergyBalance(address consumer) external view returns(uint256) {
         return energyBalance[consumer];
     }
@@ -114,4 +122,15 @@ contract ElectricityHub {
         totalkwH = 0;
         renewableProviders = new address[](0);
     }
+
+    event Received(address sender, uint amount);
+
+    fallback() external payable {
+        emit Received(msg.sender, msg.value);
+    }
+
+    receive() external payable {
+        emit Received(msg.sender, msg.value);
+    }
+
 }
