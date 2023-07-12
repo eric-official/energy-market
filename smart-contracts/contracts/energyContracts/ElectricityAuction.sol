@@ -34,7 +34,7 @@ contract ElectricityAuction {
         kwhOffered = _kwhOffered;
         auctioneer = payable(_auctioneer);
         isRenewable = _isRenewable;
-        electricityHub = ElectricityHub(msg.sender);
+        electricityHub = ElectricityHub(payable(msg.sender));
         tradingContext = Caller(callerAddress);
         contextData = tradingContext.getElectricityData();
     }
@@ -112,29 +112,22 @@ contract ElectricityAuction {
     }
 
     function collect() external payable onlyEndedAuction {
-        require(msg.sender == winner, "Only the winner can collect the auction price.");
-        uint256 alreadySentFunds = kwhOffered * participatedInAuction[msg.sender].bidPerKwh;
-        uint256 overallPrice = getPrice(kwhOffered);
-
-        int256 fundsDifference = int256(overallPrice) - int256(alreadySentFunds + msg.value);
-        require(fundsDifference <= 0, "Insufficient balance.");
-
-        if (fundsDifference < 0) {
-            uint256 refundAmount = uint256(-fundsDifference);
-            payable(msg.sender).transfer(refundAmount);
-        }
-
-        if (isRenewable) {
-            auctioneer.transfer(overallPrice);
-            electricityHub.changeProvidedEnergy(auctioneer, kwhOffered);
-        } else {
-            auctioneer.transfer(secondHighestBid * kwhOffered);
-            payable(address(electricityHub)).transfer(getPremium(kwhOffered));
-        }
+        require(msg.sender == winner, "Only the winner can collect the auction price.");     
         
         electricityHub.setEnergyBalance(msg.sender, kwhOffered);
-
         auctionPayed = true;
+        if (isRenewable) {
+            auctioneer.transfer(overallPrice);
+            uint256 remainingBalance = address(this).balance;    
+            bool success = payable(winner).send(remainingBalance);
+            require(success, "Transfer failed");   
+        } else {
+            auctioneer.transfer(secondHighestBid * kwhOffered);
+            uint256 remainingBalance = address(this).balance;    
+            bool success = payable(address(electricityHub)).send(remainingBalance);
+            require(success, "Transfer failed");      
+        }        
+
         emit AuctionCollected();
     }
 
