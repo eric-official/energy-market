@@ -147,6 +147,9 @@ contract ElectricityAuction {
         return secondHighestBid * amountInKwH + getPremium(amountInKwH);
     }
 
+    function getAuctionEnergy() public view returns(uint256) {
+        return kwhOffered;
+    }
     /**
     * Calculates the premium depending on the usage and the oracle data
     *

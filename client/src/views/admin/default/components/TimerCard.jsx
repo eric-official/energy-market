@@ -26,7 +26,7 @@ const Timer = () => {
             <div className="mb-auto flex h-[220px] w-full items-center justify-center">
                 <CountdownCircleTimer
                     isPlaying={true}
-                    duration={60 * 2}
+                    duration={60 * 1}
                     colors={['#004777', '#F7B801', '#A30000', '#A30000']}
                     colorsTime={[7, 5, 2, 0]}
                     children={(remainingTime) => {

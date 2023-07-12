@@ -8,11 +8,17 @@ const EnergyBalanceCard = ({ connectedAccount }) => {
 
     const [balance, setBalance] = useState()
     useEffect(() => {
+        let interval = null;
         async function loadBalance(connectedAccount) {
             const energy_balance = await getAccountEnergyBalance(connectedAccount)
             setBalance(energy_balance)
         }
-        loadBalance(connectedAccount)
+        interval = setInterval(() => {
+            loadBalance(connectedAccount);
+        }, 1000); // Updates every 10 seconds
+
+        // This function runs when the component unmounts, clearing the interval
+        return () => clearInterval(interval);
     }, [connectedAccount])
 
     return (

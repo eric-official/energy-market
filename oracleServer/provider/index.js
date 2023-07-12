@@ -78,7 +78,7 @@ async function main() {
   const [dataProvider] = await hardhat.ethers.getSigners();
   console.log("Account balance:", (await dataProvider.getBalance()).toString());
   // Initialize contract
-  const oracleContractAddress = "0x101DD3c70d8bd7d411073f19CBb8EF5c4a8e77ce";
+  const oracleContractAddress = "0x1F76f7f287AaF1789c9bfB2eB8780d933c182A54";
   const oracleContractABI = require("./electricityDataOracleABI.json");
   const oracleContract = new hardhat.ethers.Contract(
     oracleContractAddress,

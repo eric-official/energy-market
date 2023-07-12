@@ -59,7 +59,7 @@ async function getMonthlySpend(connectedAccount) {
     }
 }
 
-async function provide(energy_amount,connectedAccount) {
+async function provide(energy_amount, connectedAccount) {
     const contract = await getContract(ethAddress, ethABI)
     const energyAmountInt = parseInt(energy_amount);
     console.log(energyAmountInt)
@@ -70,18 +70,17 @@ async function provide(energy_amount,connectedAccount) {
     }
 }
 
-async function use(connectedAccount) {
+async function use(useEnergy, min, max, connectedAccount) {
     const contract = await getContract(ethAddress, ethABI)
     const energyBalance = await contract.getEnergyBalance(connectedAccount)
     if (energyBalance < 5) {
-        console.log("Not enough energy")
+        console.log("Not enough energy", useEnergy, max, min)
         const openAuctions = await contract.getCurrentAuctions()
         const processData = async () => {
             for (let openAuction of openAuctions) {
                 if (openAuction[1] != "0x0000000000000000000000000000000000000000") {
-                    console.log("auction", openAuction[0]);
                     const auctionContract = await getContract(openAuction[1], auctionABI)
-                    let etherToSend = 0.005;  // replace this with the actual amount
+                    let etherToSend = 0.05;  // replace this with the actual amount
                     let weiToSend = ethers.parseEther(etherToSend.toString());
 
                     // Call the bid() function and send Ether
@@ -174,6 +173,7 @@ async function getBidData() {
                     status = "Auction Ended. No Winner"
                 }
                 data.push({
+                    "blockNumber": auctionLog.blockNumber,
                     "auction": auctionAddress,
                     "status": status
                 })
@@ -181,11 +181,11 @@ async function getBidData() {
             const bid_filter = auctionContract.filters.BidPlaced();
             const bid_query = await auctionContract.queryFilter(bid_filter);
             for (let bidLog of bid_query) {
-                console.log(bidLog)
                 let status = ""
                 status = "Bid Placed. Bidder: " + bidLog.args[0] + " Price:" + ethers.formatEther(bidLog.args[1])
 
                 data.push({
+                    "blockNumber": bidLog.blockNumber,
                     "auction": auctionAddress,
                     "status": status
                 })
@@ -196,6 +196,10 @@ async function getBidData() {
     await processData();
     const returnData = {
         columns: [{
+            Header: "BLOCK NUMBER",
+            accessor: "blockNumber",
+        },
+        {
             Header: "AUCTION",
             accessor: "auction",
         },
@@ -356,7 +360,6 @@ async function subscribeBidData(callback) {
                 const auction_filter = auctionContract.filters.AuctionEnded();
                 const auction_query = await auctionContract.queryFilter(auction_filter);
                 for (let auctionLog of auction_query) {
-                    console.log(auctionLog)
                     let status = ""
                     if (auctionLog.args[1] != "0x0000000000000000000000000000000000000000") {
                         status = "Auction Ended. Winner: " + auctionLog.args[1] + " Price: " + auctionLog.args[0]
@@ -365,16 +368,34 @@ async function subscribeBidData(callback) {
                         status = "Auction Ended. No Winner"
                     }
                     data.push({
+                        "blockNumber": auctionLog.blockNumber,
                         "auction": auctionAddress,
                         "status": status
                     })
                 };
+                const bid_filter = auctionContract.filters.BidPlaced();
+                const bid_query = await auctionContract.queryFilter(bid_filter);
+                for (let bidLog of bid_query) {
+                    let status = ""
+                    status = "Bid Placed. Bidder: " + bidLog.args[0] + " Price:" + ethers.formatEther(bidLog.args[1])
+
+                    data.push({
+                        "blockNumber": bidLog.blockNumber,
+                        "auction": auctionAddress,
+                        "status": status
+                    })
+                };
+
 
             };
         }
         await processData();
         const returnData = {
             columns: [{
+                Header: "BLOCK NUMBER",
+                accessor: "blockNumber",
+            },
+            {
                 Header: "AUCTION",
                 accessor: "auction",
             },

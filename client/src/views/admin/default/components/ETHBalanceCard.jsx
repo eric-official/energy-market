@@ -9,11 +9,17 @@ const ETHBalanceCard = ({ connectedAccount }) => {
 
     const [balance, setBalance] = useState()
     useEffect(() => {
+        let interval = null;
         async function loadBalance(connectedAccount) {
             const eth_balance = await getBalance(connectedAccount)
             setBalance(parseFloat(eth_balance).toFixed(3))
         }
-        loadBalance(connectedAccount)
+        interval = setInterval(() => {
+            loadBalance(connectedAccount);
+        }, 1000); // Updates every 10 seconds
+
+        // This function runs when the component unmounts, clearing the interval
+        return () => clearInterval(interval);
     }, [connectedAccount])
 
     return (

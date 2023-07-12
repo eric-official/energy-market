@@ -94,7 +94,13 @@ const AuctionTable = () => {
                 <tr {...row.getRowProps()} key={index}>
                   {row.cells.map((cell, index) => {
                     let data;
-                    if (cell.column.Header === "AUCTION") {
+                    if (cell.column.Header === "BLOCK NUMBER") {
+                      data = (
+                        <p className="text-sm font-bold text-navy-700 dark:text-white">
+                          {cell.value}
+                        </p>
+                      );
+                    } else if (cell.column.Header === "AUCTION") {
                       const address = cell.value;
                       const shortAddress = address.slice(0, 6) + "..." + address.slice(-4);
                       data = (
