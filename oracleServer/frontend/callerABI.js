@@ -1,4 +1,9 @@
-callerABI = [
+callerABI =  [
+  {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
   {
     "anonymous": false,
     "inputs": [
@@ -95,7 +100,25 @@ callerABI = [
   {
     "inputs": [],
     "name": "getElectricityData",
-    "outputs": [],
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "carbonIntensity",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "priceCarbon",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct Caller.ElectricityData",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },

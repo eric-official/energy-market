@@ -37,14 +37,14 @@ const ComplexTable = (props) => {
 
   return (
     <Card extra={"w-full h-full px-6 pb-6 sm:overflow-x-auto"}>
-      <div class="relative flex items-center justify-between pt-4">
-        <div class="text-xl font-bold text-navy-700 dark:text-white">
+      <div className="relative flex items-center justify-between pt-4">
+        <div className="text-xl font-bold text-navy-700 dark:text-white">
           Complex Table
         </div>
         <CardMenu />
       </div>
 
-      <div class="mt-8 overflow-x-scroll xl:overflow-hidden">
+      <div className="mt-8 overflow-x-scroll xl:overflow-hidden">
         <table {...getTableProps()} className="w-full">
           <thead>
             {headerGroups.map((headerGroup, index) => (
