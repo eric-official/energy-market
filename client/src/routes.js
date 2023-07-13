@@ -27,20 +27,12 @@ const routes = [
     icon: <MdHome className="h-6 w-6" />,
     component: <MainDashboard />,
   },
-
-  {
-    name: "Profile",
-    layout: "/admin",
-    path: "profile",
-    icon: <MdPerson className="h-6 w-6" />,
-    component: <Profile />,
-  },
   {
     name: "Sign In",
-    layout: "/auth",
+    layout: "/admin",
     path: "sign-in",
     icon: <MdLock className="h-6 w-6" />,
-    component: <SignIn />,
+    component: <MainDashboard />,
   }
 ];
 export default routes;
