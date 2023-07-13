@@ -73,6 +73,7 @@ async function provide(energy_amount, connectedAccount) {
 async function use(useEnergy, min, max, connectedAccount) {
     const contract = await getContract(ethAddress, ethABI)
     const energyBalance = await contract.getEnergyBalance(connectedAccount)
+    console.log("connectedAccount", connectedAccount)
     if (energyBalance < 5) {
         console.log("Not enough energy", useEnergy, max, min)
         const openAuctions = await contract.getCurrentAuctions()
@@ -109,7 +110,7 @@ async function getAuctionData() {
     const contract = await getContract(ethAddress, ethABI)
     const log_filter = contract.filters.AuctionStarted();
     const consume_query = await contract.queryFilter(log_filter);
-    const log_filter1 = contract.filters.MatureAuctionEnded();
+    const log_filter1 = contract.filters.Auctionmatured();
     const consume_query1 = await contract.queryFilter(log_filter1);
     const data = []
     consume_query.forEach((log) => {
@@ -304,7 +305,7 @@ async function subscribeAuctionData(callback) {
     contract.on("*", async () => {
         const log_filter = contract.filters.AuctionStarted();
         const consume_query = await contract.queryFilter(log_filter);
-        const log_filter1 = contract.filters.MatureAuctionEnded();
+        const log_filter1 = contract.filters.Auctionmatured();
         const consume_query1 = await contract.queryFilter(log_filter1);
         const data = []
         consume_query.forEach((log) => {

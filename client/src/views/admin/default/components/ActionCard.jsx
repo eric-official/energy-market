@@ -54,14 +54,14 @@ const ActionCard = ({ connectedAccount }) => {
                             type="text"
                             value={energyProvide}
                             onChange={handleEnergyProvideChange}
-                            label="Energy (kwh)"
+                            label="Provide Electricity (kwh)"
                             className="px-2 py-1 rounded-full-border-2"
-                            placeholder="Enter Energy (kwh)"
+                            placeholder="Enter Electricity (kwh)"
                         />
                     </div>
                     <div className="flex items-center justify-center gap-2">
 
-                        <button className="mt-4 linear rounded-[20px] bg-brand-900 px-4 py-2 text-base font-medium text-white transition duration-200 hover:bg-brand-800 active:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300 dark:active:opacity-90" onClick={provideEnergy}>Provide Energy</button>
+                        <button className="mt-4 linear rounded-[20px] bg-brand-900 px-4 py-2 text-base font-medium text-white transition duration-200 hover:bg-brand-800 active:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300 dark:active:opacity-90" onClick={provideEnergy}>Provide Electricity</button>
                     </div>
                 </div>
 
@@ -98,7 +98,7 @@ const ActionCard = ({ connectedAccount }) => {
                 <div className=" flex items-center justify-center p-2">
 
                     <div className="flex items-center justify-center gap-2">
-                        <button className="mt-4 linear rounded-[20px] bg-brand-900 px-4 py-2 text-base font-medium text-white transition duration-200 hover:bg-brand-800 active:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300 dark:active:opacity-90" onClick={useEnergy}>Use Energy</button>
+                        <button className="mt-4 linear rounded-[20px] bg-brand-900 px-4 py-2 text-base font-medium text-white transition duration-200 hover:bg-brand-800 active:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300 dark:active:opacity-90" onClick={useEnergy}>Use Electricity</button>
                     </div>
                 </div>
             </div>

@@ -19,13 +19,11 @@ contract ElectricityHub {
     mapping(address => uint256) private provisionedElectricity;
     uint256 private totalkwH;
     address callerAddress;
-    
-    event AuctionStarted(uint256 kwhAmount, address indexed newContract);
-    event Auctionmatured(uint256 kwhAmount, address indexed newContract);
-    event ElectricityUsed(uint256 usedKwh, address indexed consumer);
 
     event AuctionStarted(uint256 kwhAmount, address indexed newContract);
-    event MatureAuctionEnded(address indexed auctionContract);
+    event Auctionmatured(address indexed auction);
+    event ElectricityUsed(uint256 usedKwh, address indexed consumer);
+
     address private owner;
 
     constructor(address callerAddressInit) {
@@ -60,7 +58,7 @@ contract ElectricityHub {
                 address(auction.auction) != address(0)
             ) {
                 auction.auction.endAuction();
-                emit MatureAuctionEnded(address(auction.auction));
+                emit Auctionmatured(address(auction.auction));
                 delete currentAuctions[i];
             }
         }
@@ -89,19 +87,27 @@ contract ElectricityHub {
         currentAuctions.push(Auction(block.timestamp, newAuction));
         emit AuctionStarted(kwhAmount, address(newAuction));
     }
-    
-    function setEnergyBalance(address consumer, uint256 kwhAmount) external payable onlyAuction {
+
+    function setEnergyBalance(
+        address consumer,
+        uint256 kwhAmount
+    ) external payable onlyAuction {
         energyBalance[consumer] = energyBalance[consumer] + kwhAmount;
     }
 
     function decreaseEnergyBalance(uint256 kwhAmount) external {
         address consumer = msg.sender;
-        require(energyBalance[consumer] >= kwhAmount, "The energy balance must be greater or equals the consumed amount.");
+        require(
+            energyBalance[consumer] >= kwhAmount,
+            "The energy balance must be greater or equals the consumed amount."
+        );
         energyBalance[consumer] = energyBalance[consumer] - kwhAmount;
-        emit ElectricityUsed(kwhAmount, consumer);
+        emit ElectricityUsed(energyBalance[consumer], consumer);
     }
 
-    function getEnergyBalance(address consumer) external view returns(uint256) {
+    function getEnergyBalance(
+        address consumer
+    ) external view returns (uint256) {
         return energyBalance[consumer];
     }
 
@@ -150,5 +156,4 @@ contract ElectricityHub {
     receive() external payable {
         emit Received(msg.sender, msg.value);
     }
-
 }
