@@ -465,6 +465,5 @@ export {
     subscribeAuctionData,
     endMatureAuction,
     getBidData,
-    subscribeBidData,
-    distributePremium
+    subscribeBidData
 }
