@@ -23,6 +23,7 @@ contract ElectricityHub {
     event AuctionStarted(uint256 kwhAmount, address indexed newContract);
     event Auctionmatured(address indexed auction);
     event ElectricityUsed(uint256 usedKwh, address indexed consumer);
+    event PremiumDistributed(address indexed provider, uint256 amount);
 
     address private owner;
 
@@ -138,7 +139,7 @@ contract ElectricityHub {
 
             // Transfer part of the overall premium
             payable(provider).transfer(balance * provisionedFactor);
-
+            emit PremiumDistributed(provider, balance * provisionedFactor);
             // Reset provided value
             delete provisionedElectricity[provider];
         }

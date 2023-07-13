@@ -10,7 +10,7 @@ module.exports = {
       ],
     },
     sepolia: {
-      url: 'https://eth-sepolia.g.alchemy.com/v2/UNdIZtG0dqvQktAMq3ABxntm1eAu-mXL',
+      url: 'https://eth-sepolia.g.alchemy.com/v2/zk2yQpcUghNqwg6DiyuhzdIDu5u5_Lb2',
       accounts: [
         '899bce550bd4c981b5ca2a9bff04bc68ef4a5bf83a9448bca7056e2b0429e3ad',
       ],

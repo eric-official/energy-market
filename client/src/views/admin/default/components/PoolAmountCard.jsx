@@ -5,14 +5,18 @@ import { isWalletConnected, connectWallet } from "../../../../shared/BasicQuery"
 
 import { IoMdHome } from "react-icons/io";
 import { useGlobalState } from "../../../../shared/dataStore"
+import { check } from "prettier";
 
 
 
 const PoolAmountCard = () => {
     const [connectedAccount, setConnectedAccount] = useGlobalState('connectedAccount')
-    useEffect(async () => {
-        isWalletConnected()
-    }, [])
+    useEffect(() => {
+        async function checkWallet() {
+            await isWalletConnected();
+        }
+        checkWallet();
+    }, []);
 
     return (
 

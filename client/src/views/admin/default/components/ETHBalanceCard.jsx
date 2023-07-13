@@ -16,7 +16,7 @@ const ETHBalanceCard = ({ connectedAccount }) => {
         }
         interval = setInterval(() => {
             loadBalance(connectedAccount);
-        }, 1000); // Updates every 10 seconds
+        }, 5000); // Updates every 10 seconds
 
         // This function runs when the component unmounts, clearing the interval
         return () => clearInterval(interval);

@@ -5,15 +5,18 @@ import { useGlobalState } from "../../../../shared/dataStore"
 import { BiSolidWallet } from "react-icons/bi";
 import { MdCheckCircle, MdCancel, MdOutlineError } from "react-icons/md";
 import { CountdownCircleTimer } from 'react-countdown-circle-timer'
-import { endMatureAuction } from "../../../../shared/ETHQuery";
+import { endMatureAuction, distributePremium } from "../../../../shared/ETHQuery";
 
 const { ethereum } = window
 
 const Timer = () => {
     const [connectedAccount, setConnectedAccount] = useGlobalState('connectedAccount')
-    useEffect(async () => {
-        isWalletConnected()
-    }, [])
+    useEffect(() => {
+        async function checkWallet() {
+            await isWalletConnected();
+        }
+        checkWallet();
+    }, []);
     return (
         <Card extra="!rounded-[20px] p-3">
             <div className="flex flex-row justify-center px-3 pt-2">
@@ -26,7 +29,7 @@ const Timer = () => {
             <div className="mb-auto flex h-[220px] w-full items-center justify-center">
                 <CountdownCircleTimer
                     isPlaying={true}
-                    duration={60 * 1}
+                    duration={60 * 2}
                     colors={['#004777', '#F7B801', '#A30000', '#A30000']}
                     colorsTime={[7, 5, 2, 0]}
                     children={(remainingTime) => {

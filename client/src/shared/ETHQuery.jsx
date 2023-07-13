@@ -59,12 +59,12 @@ async function getMonthlySpend(connectedAccount) {
     }
 }
 
-async function provide(energy_amount, connectedAccount) {
+async function provide(energy_amount, isRenewable, connectedAccount) {
     const contract = await getContract(ethAddress, ethABI)
     const energyAmountInt = parseInt(energy_amount);
-    console.log(energyAmountInt)
+    console.log("Providing Electricity:", energyAmountInt)
     try {
-        await contract.provide(energyAmountInt, true);
+        await contract.provide(energyAmountInt, isRenewable);
     } catch (error) {
         console.error(error);
     }
@@ -72,16 +72,24 @@ async function provide(energy_amount, connectedAccount) {
 
 async function use(useEnergy, min, max, connectedAccount) {
     const contract = await getContract(ethAddress, ethABI)
-    const energyBalance = await contract.getEnergyBalance(connectedAccount)
-    console.log("connectedAccount", connectedAccount)
+    let energyBalance = await contract.getEnergyBalance(connectedAccount)
+    let energyBalanceNumber = parseInt(energyBalance.toString());
+
+    if (useEnergy <= energyBalanceNumber && energyBalanceNumber > 0) {
+        console.log("Enough electricity in reserve. Using Electricity...")
+        await contract.decreaseEnergyBalance(useEnergy);
+        energyBalance = await contract.getEnergyBalance(connectedAccount);
+        console.log("Energy used. Remaining energy:", ethers.formatUnits(energyBalance, 'wei'));
+        useEnergy = 0
+    }
     if (energyBalance < 5) {
-        console.log("Not enough energy", useEnergy, max, min)
+        console.log("Electricity below threshold. Not enough energy... Starting bidding")
         const openAuctions = await contract.getCurrentAuctions()
         const processData = async () => {
             for (let openAuction of openAuctions) {
                 if (openAuction[1] != "0x0000000000000000000000000000000000000000") {
                     const auctionContract = await getContract(openAuction[1], auctionABI)
-                    let etherToSend = 0.05;  // replace this with the actual amount
+                    let etherToSend = min;
                     let weiToSend = ethers.parseEther(etherToSend.toString());
 
                     // Call the bid() function and send Ether
@@ -90,7 +98,7 @@ async function use(useEnergy, min, max, connectedAccount) {
                         console.log(`Auction ended with winner: ${winner} and second highest bid: ${secondHighestBid}`);
 
                         if (winner.toLowerCase() === connectedAccount.toLowerCase()) {
-                            console.log("This account has won the auction");
+                            console.log("This account has won the auction. Collecting the electricity");
 
                             // Call the collect function
                             const collectTransaction = await auctionContract.collect();
@@ -104,6 +112,14 @@ async function use(useEnergy, min, max, connectedAccount) {
         await processData();
 
     }
+    if (useEnergy != 0 && useEnergy <= energyBalanceNumber && energyBalanceNumber > 0) {
+        console.log("Enough electricity in reserve. Using Electricity...")
+        await contract.decreaseEnergyBalance(useEnergy);
+        energyBalance = await contract.getEnergyBalance(connectedAccount);
+        console.log("Energy used. Remaining energy:", ethers.formatUnits(energyBalance, 'wei'));
+        useEnergy = 0
+    }
+
 }
 async function getAuctionData() {
     // Your logic to fetch the data
@@ -112,6 +128,8 @@ async function getAuctionData() {
     const consume_query = await contract.queryFilter(log_filter);
     const log_filter1 = contract.filters.Auctionmatured();
     const consume_query1 = await contract.queryFilter(log_filter1);
+    const log_filter2 = contract.filters.PremiumDistributed();
+    const consume_query2 = await contract.queryFilter(log_filter2);
     const data = []
     consume_query.forEach((log) => {
         data.push({
@@ -126,6 +144,14 @@ async function getAuctionData() {
             "blockNumber": log.blockNumber,
             "energy": "-",
             "status": "Auction Ended",
+            "address": log.args[0]
+        })
+    });
+    consume_query2.forEach((log) => {
+        data.push({
+            "blockNumber": log.blockNumber,
+            "energy": "-",
+            "status": "Premium Distributed",
             "address": log.args[0]
         })
     });
@@ -227,7 +253,19 @@ async function consume(connectedAccount) {
 async function endMatureAuction() {
     const contract = await getContract(ethAddress, ethABI)
     try {
+        console.log("Ending mature auctions")
         await contract.endMatureAuctions()
+        await contract.distributePremium()
+
+    } catch (error) {
+        console.error(error);
+    }
+}
+async function distributePremium() {
+    const contract = await getContract(ethAddress, ethABI)
+    try {
+        await contract.distributePremium()
+        console.log("Premium Distributed")
     } catch (error) {
         console.error(error);
     }
@@ -307,6 +345,8 @@ async function subscribeAuctionData(callback) {
         const consume_query = await contract.queryFilter(log_filter);
         const log_filter1 = contract.filters.Auctionmatured();
         const consume_query1 = await contract.queryFilter(log_filter1);
+        const log_filter2 = contract.filters.Auctionmatured();
+        const consume_query2 = await contract.queryFilter(log_filter2);
         const data = []
         consume_query.forEach((log) => {
             data.push({
@@ -321,6 +361,15 @@ async function subscribeAuctionData(callback) {
                 "blockNumber": log.blockNumber,
                 "energy": "-",
                 "status": "Auction Ended",
+                "address": log.args[0]
+            })
+        });
+        consume_query2.forEach((log) => {
+            console.log("Premium Distributed logs ",log)
+            data.push({
+                "blockNumber": log.blockNumber,
+                "energy": "-",
+                "status": "Premium Distributed",
                 "address": log.args[0]
             })
         });
@@ -424,5 +473,6 @@ export {
     subscribeAuctionData,
     endMatureAuction,
     getBidData,
-    subscribeBidData
+    subscribeBidData,
+    distributePremium
 }

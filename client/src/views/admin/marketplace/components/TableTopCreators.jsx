@@ -92,7 +92,7 @@ function TopCreatorTable(props) {
                       );
                     } else if (cell.column.Header === "Rating") {
                       data = (
-                        <div class="mx-2 flex font-bold">
+                        <div className="mx-2 flex font-bold">
                           <Progress width="w-16" value={cell.value} />
                         </div>
                       );
