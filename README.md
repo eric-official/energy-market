@@ -9,6 +9,9 @@
       <a href="#about-the-project">About The Project</a>
     </li>
     <li>
+      <a href="#about-the-project">Architecture</a>
+    </li>
+    <li>
       <a href="#getting-started">Getting Started</a>
       <ul>
         <li><a href="#prerequisites">Frontend</a></li>
@@ -22,7 +25,16 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
+The project is about facilitating electricity trading on the blockchain.
+By providing a solution to participate in an (Vickrey) auction, market participants
+can exchange monetary values to get the eligibility to conusme electrictty from the grid.
+Additionally, a premium is send to all electricity providers which are considered renewable.
+The premium is to incentivize electricty providers to invest in renewable energy sources to collect 
+this monetary value in addition to the auction price. Conusmer are oblivious of this premium which varies 
+depending on the energy mix in the grid. This will lead to a transformation in the energy production which will in long
+term lead to net zero emissions in the energy production and the premium will converge to 0.
 
+### Architecture
 
 
 <!-- GETTING STARTED -->
