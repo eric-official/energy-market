@@ -77,7 +77,7 @@ const PieChartCard = () => {
                         <p className="ml-1 text-sm font-normal text-gray-600">Non-Renewable Energy</p>
                     </div>
                     <p className="mt-px text-xl font-bold text-navy-700 dark:text-white">
-                        25%
+                        27%
                     </p>
                 </div>
             </div>

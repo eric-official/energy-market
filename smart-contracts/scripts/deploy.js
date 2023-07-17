@@ -6,19 +6,26 @@ const path = "./scripts/deployedContracts.json";
 const deployContracts = async () => {
   let deployedContracts = {}
 
-    // Deploy ElectricityTradingHub
+    // Deploy Caller
   const callerFactory = await hre.ethers.getContractFactory('Caller')
   const callerContract = await callerFactory.deploy()
   await callerContract.deployed()
   deployedContracts["Caller"] = callerContract.address
   console.log('Caller deployed to:', callerContract.address)
 
-      // Deploy ElectricityTradingHub
+      // Deploy Oracle
   const oracleFactory = await hre.ethers.getContractFactory('ElectricityDataOracle')
   const oracleContract = await oracleFactory.deploy()
   await oracleContract.deployed()
   deployedContracts["ElectricityDataOracle"] = oracleContract.address
   console.log('ElectricityDataOracle deployed to:', oracleContract.address)
+
+  // Deploy ElectricityHub contract with the initial caller contract deployed address
+  const hubFactory = await hre.ethers.getContractFactory('ElectricityHub')
+  const hubContract = await hubFactory.deploy(callerContract.address)
+  await hubContract.deployed()
+  deployedContracts["ElectricityHub"] = hubContract.address
+  console.log('ElectricityHub deployed to:', hubContract.address)
 
   // Call the setElectricityOracleAddress function on the Caller contract
   await callerContract.setElectricityOracleAddress(oracleContract.address)

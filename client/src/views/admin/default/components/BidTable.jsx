@@ -1,16 +1,38 @@
 import CardMenu from "components/card/CardMenu";
 import Card from "components/card";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   useGlobalFilter,
   usePagination,
   useSortBy,
   useTable,
 } from "react-table";
-import { MdCheckCircle, MdCancel, MdOutlineError } from "react-icons/md";
-import { useMemo } from "react";
-import Progress from "components/progress";
-const ComplexTable = (props) => {
-  const { columnsData, tableData } = props;
+import { getBidData, subscribeBidData } from "../../../../shared/ETHQuery";
+
+
+
+const AuctionTable = () => {
+  const [columnsData, setColumnsData] = useState([]);
+  const [tableData, setTableData] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const { columns, data } = await getBidData();
+        setColumnsData(columns);
+        setTableData(data);
+      } catch (error) {
+        console.error("Failed to fetch data", error);
+      }
+    };
+
+    fetchData();
+    subscribeBidData((newData) => {
+      setColumnsData(newData.columns);
+      setTableData(newData.data);
+    });
+
+  }, []);
 
   const columns = useMemo(() => columnsData, [columnsData]);
   const data = useMemo(() => tableData, [tableData]);
@@ -19,6 +41,8 @@ const ComplexTable = (props) => {
     {
       columns,
       data,
+      initialState: { sortBy: [{ id: 'blockNumber', desc: true }] },  // Add this line
+
     },
     useGlobalFilter,
     useSortBy,
@@ -36,15 +60,15 @@ const ComplexTable = (props) => {
   initialState.pageSize = 5;
 
   return (
-    <Card extra={"w-full h-full p-4 sm:overflow-x-auto"}>
-      <div className="relative flex items-center justify-between">
+    <Card extra={"w-full pb-10 p-4 h-full"}>
+      <header className="relative flex items-center justify-between">
         <div className="text-xl font-bold text-navy-700 dark:text-white">
-          Complex Table
+          Bids and Results
         </div>
         <CardMenu />
-      </div>
+      </header>
 
-      <div className="mt-8 h-full overflow-x-scroll xl:overflow-hidden">
+      <div className="mt-8 overflow-x-scroll xl:overflow-x-hidden">
         <table {...getTableProps()} className="w-full">
           <thead>
             {headerGroups.map((headerGroup, index) => (
@@ -53,11 +77,11 @@ const ComplexTable = (props) => {
                   <th
                     {...column.getHeaderProps(column.getSortByToggleProps())}
                     key={index}
-                    className="border-b border-gray-200 pr-28 pb-[10px] text-start dark:!border-navy-700"
+                    className="border-b border-gray-200 pr-8 pb-[10px] text-start dark:!border-navy-700"
                   >
-                    <p className="text-xs tracking-wide text-gray-600">
+                    <div className="flex w-full justify-between pr-10 text-xs tracking-wide text-gray-600">
                       {column.render("Header")}
-                    </p>
+                    </div>
                   </th>
                 ))}
               </tr>
@@ -69,42 +93,31 @@ const ComplexTable = (props) => {
               return (
                 <tr {...row.getRowProps()} key={index}>
                   {row.cells.map((cell, index) => {
-                    let data = "";
-                    if (cell.column.Header === "NAME") {
+                    let data;
+                    if (cell.column.Header === "BLOCK NUMBER") {
                       data = (
                         <p className="text-sm font-bold text-navy-700 dark:text-white">
                           {cell.value}
+                        </p>
+                      );
+                    } else if (cell.column.Header === "AUCTION") {
+                      const address = cell.value;
+                      const shortAddress = address.slice(0, 6) + "..." + address.slice(-4);
+                      data = (
+                        <p className="text-sm font-bold text-navy-700 dark:text-white">
+                          {shortAddress}
                         </p>
                       );
                     } else if (cell.column.Header === "STATUS") {
                       data = (
-                        <div className="flex items-center gap-2">
-                          <div className={`rounded-full text-xl`}>
-                            {cell.value === "Approved" ? (
-                              <MdCheckCircle className="text-green-500" />
-                            ) : cell.value === "Disable" ? (
-                              <MdCancel className="text-red-500" />
-                            ) : cell.value === "Error" ? (
-                              <MdOutlineError className="text-orange-500" />
-                            ) : null}
-                          </div>
-                          <p className="text-sm font-bold text-navy-700 dark:text-white">
-                            {cell.value}
-                          </p>
-                        </div>
-                      );
-                    } else if (cell.column.Header === "DATE") {
-                      data = (
-                        <p className="text-sm font-bold text-navy-700 dark:text-white">
+                        <p className="text-sm  text-navy-700 dark:text-white">
                           {cell.value}
                         </p>
                       );
-                    } else if (cell.column.Header === "PROGRESS") {
-                      data = <Progress width="w-[68px]" value={cell.value} />;
                     }
                     return (
                       <td
-                        className="pt-[14px] pb-[18px] sm:text-[14px]"
+                        className="pt-[14px] pb-[20px] sm:text-[14px]"
                         {...cell.getCellProps()}
                         key={index}
                       >
@@ -122,4 +135,4 @@ const ComplexTable = (props) => {
   );
 };
 
-export default ComplexTable;
+export default AuctionTable;

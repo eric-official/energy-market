@@ -1,7 +1,7 @@
-import {getContract} from "./BasicQuery";
-import { ethAddress, ethABI } from '../utils/constants'
+import { getContract, getLogs } from "./BasicQuery";
+import { ethAddress, ethABI, auctionABI } from '../utils/constants'
 import { ethers } from 'ethers'
-import React, { useEffect, useState  } from "react";
+import React, { useEffect, useState } from "react";
 
 
 
@@ -33,7 +33,7 @@ async function getQueueSum() {
 async function getAccountEnergyBalance(connectedAccount) {
     const contract = await getContract(ethAddress, ethABI)
     try {
-        const energy_balance = await contract.getAccountEnergyBalance(connectedAccount);
+        const energy_balance = await contract.getEnergyBalance(connectedAccount);
         return Promise.resolve(energy_balance);
     } catch (error) {
         console.error(error);
@@ -46,9 +46,9 @@ async function getMonthlySpend(connectedAccount) {
         const txs_from_account = contract.filters.Consume(connectedAccount, null);
         const query_results = await contract.queryFilter(txs_from_account);
         let monthly_spend = 0;
-        for(let i = 0; i < query_results.length; i++) {
+        for (let i = 0; i < query_results.length; i++) {
             let time_diff = Number(Math.floor(Date.now() / 1000)) - Number(query_results[i].args[4])
-            if(time_diff <= 30 * 24 * 60 * 60) {
+            if (time_diff <= 30 * 24 * 60 * 60) {
                 monthly_spend += Number(query_results[i].args[2]);
             }
         }
@@ -59,24 +59,186 @@ async function getMonthlySpend(connectedAccount) {
     }
 }
 
-async function provide(connectedAccount) {
+async function provide(energy_amount, isRenewable, connectedAccount) {
     const contract = await getContract(ethAddress, ethABI)
+    const energyAmountInt = parseInt(energy_amount);
+    console.log("Providing Electricity:", energyAmountInt)
     try {
-        await contract.provide(connectedAccount, 100, true);
+        await contract.provide(energyAmountInt, isRenewable);
     } catch (error) {
         console.error(error);
     }
 }
 
-async function use(connectedAccount) {
+async function use(useEnergy, min, max, connectedAccount) {
     const contract = await getContract(ethAddress, ethABI)
-    try {
-        //const kwhAmount = Math.floor(Math.random() * 5);
-        await contract.use(connectedAccount, 1)
-    } catch (error) {
-        console.error(error);
+    let energyBalance = await contract.getEnergyBalance(connectedAccount)
+    let energyBalanceNumber = parseInt(energyBalance.toString());
+
+    if (useEnergy <= energyBalanceNumber && energyBalanceNumber > 0) {
+        console.log("Enough electricity in reserve. Using Electricity...")
+        await contract.decreaseEnergyBalance(useEnergy);
+        energyBalance = await contract.getEnergyBalance(connectedAccount);
+        console.log("Energy used. Remaining energy:", ethers.formatUnits(energyBalance, 'wei'));
+        useEnergy = 0
     }
+    if (energyBalance < 5) {
+        console.log("Electricity below threshold. Not enough energy... Starting bidding")
+        const openAuctions = await contract.getCurrentAuctions()
+        const processData = async () => {
+            for (let openAuction of openAuctions) {
+                if (openAuction[1] != "0x0000000000000000000000000000000000000000") {
+                    const auctionContract = await getContract(openAuction[1], auctionABI)
+                    let etherToSend = min;
+                    let weiToSend = ethers.parseEther(etherToSend.toString());
+
+                    // Call the bid() function and send Ether
+                    let transaction = await auctionContract.bid({ value: weiToSend });
+                    auctionContract.on('AuctionEnded', async (secondHighestBid, winner, event) => {
+                        console.log(`Auction ended with winner: ${winner} and second highest bid: ${secondHighestBid}`);
+
+                        if (winner.toLowerCase() === connectedAccount.toLowerCase()) {
+                            console.log("This account has won the auction. Collecting the electricity");
+
+                            // Call the collect function
+                            const collectTransaction = await auctionContract.collect();
+                            console.log("Collect transaction:", collectTransaction);
+                        }
+                    });
+                    break;
+                }
+            }
+        }
+        await processData();
+
+    }
+    if (useEnergy != 0 && useEnergy <= energyBalanceNumber && energyBalanceNumber > 0) {
+        console.log("Enough electricity in reserve. Using Electricity...")
+        await contract.decreaseEnergyBalance(useEnergy);
+        energyBalance = await contract.getEnergyBalance(connectedAccount);
+        console.log("Energy used. Remaining energy:", ethers.formatUnits(energyBalance, 'wei'));
+        useEnergy = 0
+    }
+
 }
+async function getAuctionData() {
+    // Your logic to fetch the data
+    const contract = await getContract(ethAddress, ethABI)
+    const log_filter = contract.filters.AuctionStarted();
+    const consume_query = await contract.queryFilter(log_filter);
+    const log_filter1 = contract.filters.Auctionmatured();
+    const consume_query1 = await contract.queryFilter(log_filter1);
+    const log_filter2 = contract.filters.PremiumDistributed();
+    const consume_query2 = await contract.queryFilter(log_filter2);
+    const data = []
+    consume_query.forEach((log) => {
+        data.push({
+            "blockNumber": log.blockNumber,
+            "energy": String(log.args[0]),
+            "status": "Auction Started",
+            "address": log.args[1]
+        })
+    });
+    consume_query1.forEach((log) => {
+        data.push({
+            "blockNumber": log.blockNumber,
+            "energy": "-",
+            "status": "Auction Ended",
+            "address": log.args[0]
+        })
+    });
+    consume_query2.forEach((log) => {
+        data.push({
+            "blockNumber": log.blockNumber,
+            "energy": "-",
+            "status": "Premium Distributed",
+            "address": log.args[0]
+        })
+    });
+
+    const returnData = {
+        columns: [{
+            Header: "BLOCK NUMBER",
+            accessor: "blockNumber",
+        },
+        {
+            Header: "ENERGY",
+            accessor: "energy",
+        },
+        {
+            Header: "STATUS",
+            accessor: "status",
+        },
+        {
+            Header: "AUCTION ADDRESS",
+            accessor: "address",
+        },],
+        data: data
+    }
+    return returnData
+
+};
+
+async function getBidData() {
+    // Your logic to fetch the data
+    const contract = await getContract(ethAddress, ethABI)
+    const log_filter = contract.filters.AuctionStarted();
+    const consume_query = await contract.queryFilter(log_filter);
+    const data = []
+    const processData = async () => {
+        for (let log of consume_query) {
+            const auctionAddress = log.args[1];
+            const auctionContract = await getContract(auctionAddress, auctionABI);
+            const auction_filter = auctionContract.filters.AuctionEnded();
+            const auction_query = await auctionContract.queryFilter(auction_filter);
+            for (let auctionLog of auction_query) {
+                let status = ""
+                if (auctionLog.args[1] != "0x0000000000000000000000000000000000000000") {
+                    status = "Auction Ended. Winner:" + auctionLog.args[1] + " Price:" + auctionLog.args[0]
+                }
+                else {
+                    status = "Auction Ended. No Winner"
+                }
+                data.push({
+                    "blockNumber": auctionLog.blockNumber,
+                    "auction": auctionAddress,
+                    "status": status
+                })
+            };
+            const bid_filter = auctionContract.filters.BidPlaced();
+            const bid_query = await auctionContract.queryFilter(bid_filter);
+            for (let bidLog of bid_query) {
+                let status = ""
+                status = "Bid Placed. Bidder: " + bidLog.args[0] + " Price:" + ethers.formatEther(bidLog.args[1])
+
+                data.push({
+                    "blockNumber": bidLog.blockNumber,
+                    "auction": auctionAddress,
+                    "status": status
+                })
+            };
+
+        };
+    }
+    await processData();
+    const returnData = {
+        columns: [{
+            Header: "BLOCK NUMBER",
+            accessor: "blockNumber",
+        },
+        {
+            Header: "AUCTION",
+            accessor: "auction",
+        },
+        {
+            Header: "STATUS",
+            accessor: "status",
+        }],
+        data: data
+    }
+    return returnData
+
+};
 
 async function consume(connectedAccount) {
     const contract = await getContract(ethAddress, ethABI)
@@ -88,7 +250,20 @@ async function consume(connectedAccount) {
     }
 }
 
-async function getMonthlyTrafficData(connectedAccount){
+async function endMatureAuction() {
+    const contract = await getContract(ethAddress, ethABI)
+    try {
+        console.log("Ending mature auctions")
+        await contract.endMatureAuctions()
+        await contract.distributePremium()
+
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+
+async function getMonthlyTrafficData(connectedAccount) {
     const contract = await getContract(ethAddress, ethABI)
     try {
         const consume_filter = contract.filters.Consume(connectedAccount, null);
@@ -97,7 +272,7 @@ async function getMonthlyTrafficData(connectedAccount){
         const use_query = await contract.queryFilter(use_filter);
 
         let all_queries = consume_query.concat(use_query);
-        all_queries.sort(function(a,b) {
+        all_queries.sort(function (a, b) {
             let time_index_a = 0;
             let time_index_b = 0;
             if (a.fragment.name === "Consume") {
@@ -149,13 +324,133 @@ async function getMonthlyTrafficData(connectedAccount){
 
         }
 
-        const queryResults = {"data": monthly_traffic_data, "labels": monthly_traffic_labels}
+        const queryResults = { "data": monthly_traffic_data, "labels": monthly_traffic_labels }
         return Promise.resolve(queryResults);
     } catch (error) {
         console.error(error);
     }
 }
+async function subscribeAuctionData(callback) {
+    const contract = await getContract(ethAddress, ethABI)
+    contract.on("*", async () => {
+        const log_filter = contract.filters.AuctionStarted();
+        const consume_query = await contract.queryFilter(log_filter);
+        const log_filter1 = contract.filters.Auctionmatured();
+        const consume_query1 = await contract.queryFilter(log_filter1);
+        const log_filter2 = contract.filters.Auctionmatured();
+        const consume_query2 = await contract.queryFilter(log_filter2);
+        const data = []
+        consume_query.forEach((log) => {
+            data.push({
+                "blockNumber": log.blockNumber,
+                "energy": String(log.args[0]),
+                "status": "Auction creation",
+                "address": log.args[1]
+            })
+        });
+        consume_query1.forEach((log) => {
+            data.push({
+                "blockNumber": log.blockNumber,
+                "energy": "-",
+                "status": "Auction Ended",
+                "address": log.args[0]
+            })
+        });
+        consume_query2.forEach((log) => {
+            console.log("Premium Distributed logs ",log)
+            data.push({
+                "blockNumber": log.blockNumber,
+                "energy": "-",
+                "status": "Premium Distributed",
+                "address": log.args[0]
+            })
+        });
+        // Here, we call the callback with the new data instead of returning it
+        callback({
+            columns: [{
+                Header: "BLOCK NUMBER",
+                accessor: "blockNumber",
+            },
+            {
+                Header: "ENERGY",
+                accessor: "energy",
+            },
+            {
+                Header: "STATUS",
+                accessor: "status",
+            },
+            {
+                Header: "AUCTION ADDRESS",
+                accessor: "address",
+            },],
+            data: data
+        })
+    });
+}
 
+async function subscribeBidData(callback) {
+    const contract = await getContract(ethAddress, ethABI)
+    contract.on("*", async () => {
+        const log_filter = contract.filters.AuctionStarted();
+        const consume_query = await contract.queryFilter(log_filter);
+        const data = []
+        const processData = async () => {
+
+            for (let log of consume_query) {
+                const auctionAddress = log.args[1];
+                const auctionContract = await getContract(auctionAddress, auctionABI);
+                const auction_filter = auctionContract.filters.AuctionEnded();
+                const auction_query = await auctionContract.queryFilter(auction_filter);
+                for (let auctionLog of auction_query) {
+                    let status = ""
+                    if (auctionLog.args[1] != "0x0000000000000000000000000000000000000000") {
+                        status = "Auction Ended. Winner: " + auctionLog.args[1] + " Price: " + auctionLog.args[0]
+                    }
+                    else {
+                        status = "Auction Ended. No Winner"
+                    }
+                    data.push({
+                        "blockNumber": auctionLog.blockNumber,
+                        "auction": auctionAddress,
+                        "status": status
+                    })
+                };
+                const bid_filter = auctionContract.filters.BidPlaced();
+                const bid_query = await auctionContract.queryFilter(bid_filter);
+                for (let bidLog of bid_query) {
+                    let status = ""
+                    status = "Bid Placed. Bidder: " + bidLog.args[0] + " Price:" + ethers.formatEther(bidLog.args[1])
+
+                    data.push({
+                        "blockNumber": bidLog.blockNumber,
+                        "auction": auctionAddress,
+                        "status": status
+                    })
+                };
+
+
+            };
+        }
+        await processData();
+        const returnData = {
+            columns: [{
+                Header: "BLOCK NUMBER",
+                accessor: "blockNumber",
+            },
+            {
+                Header: "AUCTION",
+                accessor: "auction",
+            },
+            {
+                Header: "STATUS",
+                accessor: "status",
+            }],
+            data: data
+        }
+        // Here, we call the callback with the new data instead of returning it
+        callback(returnData)
+    });
+}
 
 export {
     provide,
@@ -166,4 +461,9 @@ export {
     getMonthlySpend,
     use,
     getMonthlyTrafficData,
+    getAuctionData,
+    subscribeAuctionData,
+    endMatureAuction,
+    getBidData,
+    subscribeBidData
 }
