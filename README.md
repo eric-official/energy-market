@@ -82,23 +82,20 @@ How to run the project locally on your laptop
 
 ### Prerequisites
 
-In order to run the project on your laptop locally, follow the steps:
-* Go to the folder `/client` and run all the commands from there. Install the dependencies for the react frontend.
+In order to run the project on your laptop locally, you first have to follow the subsequent installation instructions:
+* Go to the folder `energy-market/client` and run the following command from there to install the dependencies for the React frontend.
   ```sh
   npm install
   ```
-* Start the react frontend server.
+* Go to the folder `energy-market/oracleServer` and run the following command from there to install the dependencies for the oracle.
   ```sh
-  npm start
+  npm install hardhat
   ```
 
-### Installation
-
-
-
 ### How to run 
-- Oracle server: all the commands should be run from the follwing folder path: `energy-market/oracleServer`
-1. In order to start the frontend to test the oracle server,  and run the following command:
+In order to run the project on your laptop locally, you have to follow the subsequent execution instructions:
+* Go to the folder `energy-market/oracleServer` and run the following commands from there to start the oracle
+1. In order to start the oracle server, run the following command:
 ```
 node frontend.js
 ```
@@ -106,11 +103,15 @@ node frontend.js
 ```
 npx hardhat run provider --network sepolia 
 ```
+* Go to the folder `energy-market/client` and run the following command from there to run the React frontend.
+  ```sh
+  npm start
+  ```
 ### Smart Contract 
 
 ![Oracle Architecture](images/oracle_architecture.png)
 
-Currently for our project, we are using Hardhat as the ethereum development environment. For the development purpose, we are using the sepolia testnet. Everything is automated and already configured throught hardhat config files to deploy to the testnet.
+Currently for our project, we are using Hardhat as the Ethereum development environment. For the development purpose, we are using the Sepolia testnet. Everything is automated and already configured throught Hardhat config files to deploy to the testnet.
 
 All the following commands needs to be executed from the `energy-market/smart-contracts` folder.
 - In order to compile your smart contracts:
