@@ -137,13 +137,6 @@ contract ElectricityAuction {
         }
 
         emit AuctionEnded(secondHighestBid, winner);
-    }
-
-    function collect() external payable onlyEndedAuction {
-        require(
-            msg.sender == winner,
-            "Only the winner can collect the auction price."
-        );
 
         electricityHub.setEnergyBalance(msg.sender, kwhOffered);
         auctionPayed = true;
@@ -165,7 +158,7 @@ contract ElectricityAuction {
 
         emit AuctionCollected();
     }
-
+    
     /**
      * Calculates the premium depending on the usage and the oracle data.
      */
