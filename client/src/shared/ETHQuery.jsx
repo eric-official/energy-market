@@ -261,15 +261,7 @@ async function endMatureAuction() {
         console.error(error);
     }
 }
-async function distributePremium() {
-    const contract = await getContract(ethAddress, ethABI)
-    try {
-        await contract.distributePremium()
-        console.log("Premium Distributed")
-    } catch (error) {
-        console.error(error);
-    }
-}
+
 
 async function getMonthlyTrafficData(connectedAccount) {
     const contract = await getContract(ethAddress, ethABI)
@@ -473,6 +465,5 @@ export {
     subscribeAuctionData,
     endMatureAuction,
     getBidData,
-    subscribeBidData,
-    distributePremium
+    subscribeBidData
 }
