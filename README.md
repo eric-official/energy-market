@@ -1,7 +1,10 @@
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
 <a name="readme-top"></a>
 
+# Energy Market
+
 <!-- TABLE OF CONTENTS -->
+
 <details>
   <summary>Table of Contents</summary>
   <ol>
@@ -19,9 +22,6 @@
         <li><a href="#installation">Smart Contract</a></li>
       </ul>
 </details>
-
-
-# Energy Market
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
