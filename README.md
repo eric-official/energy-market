@@ -21,6 +21,7 @@
 </details>
 
 
+# Energy Market
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
@@ -33,8 +34,6 @@ The premium is to incentivize electricty providers to invest in renewable energy
 this monetary value in addition to the auction price. Conusmer are oblivious of this premium which varies 
 depending on the energy mix in the grid. This will lead to a transformation in the energy production which will in long
 term lead to net zero emissions in the energy production and the premium will converge to 0.
-
-### Architecture
 
 
 <!-- GETTING STARTED -->
